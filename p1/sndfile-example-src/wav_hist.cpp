@@ -40,18 +40,25 @@ int main(int argc, char *argv[]) {
 	vector<short> samples(FRAMES_BUFFER_SIZE * sndFile.channels());
 
 	WAVHist hist { sndFile };
+
+  ofstream myfile;
+  myfile.open (  "_quant_MID.txt" );
+
+  ofstream myfile1;
+  myfile1.open ( "_quant_SIDE.txt" );
+
 	while((nFrames = sndFile.readf(samples.data(), FRAMES_BUFFER_SIZE))) { // 10 2
 		samples.resize(nFrames * sndFile.channels());
+
 		hist.update(samples);
 		hist.update_MID(samples);
 		hist.update_SIDE(samples);
 	}
-
 	hist.dump(channel);
-	hist.dump_MID();
-	hist.dump_SIDE();
-
-
+	hist.dump_MID(myfile);
+	hist.dump_SIDE(myfile1);
+  myfile.close();
+  myfile1.close();
 
 	return 0;
 }

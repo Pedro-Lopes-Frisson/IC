@@ -2,6 +2,7 @@
 #define WAVHIST_H
 
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <map>
 #include <sndfile.hh>
@@ -11,9 +12,10 @@ class WAVHist {
 	std::vector<std::map<short, size_t>> counts;
 	std::map<short, size_t> countsMID;
 	std::map<short, size_t> countsSIDE;
+  std::string filename;
 
   public:
-	WAVHist(const SndfileHandle& sfh) {
+	WAVHist(const SndfileHandle& sfh ) {
 		counts.resize(sfh.channels());
 	}
 
@@ -53,13 +55,13 @@ class WAVHist {
 			std::cout << value << '\t' << counter << '\n';
 	}
 
-	void dump_SIDE() const {
+	void dump_SIDE( std::ofstream& file) const {
 		for(auto [value, counter] : countsSIDE)
-			std::cout << "SIDE" << value << '\t' << counter << '\n';
+			file << value << '\t' << counter << '\n';
 	}
-	void dump_MID() const {
+	void dump_MID(std::ofstream& file) const {
 		for(auto [value, counter] : countsMID)
-			std::cout << "MID" << value << '\t' << counter << '\n';
+      file << value << '\t' << counter << '\n';
 	}
 
 
