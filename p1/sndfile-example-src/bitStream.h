@@ -9,6 +9,7 @@
 #include <string>
 #include <bitset>
 #include <string>
+
 //#include <sndfile.hh>
 struct Student {
     int roll_no;
@@ -29,35 +30,29 @@ private:
 
 public:
     BitStream(std::string fName) {
-        fIn.open(fName, std::ios::binary | std::ios_base::in | std::ios_base::out);
-        fOut.open(fName, std::ios::binary | std::ios_base::out | std::fstream ::app);
+        fIn.open(fName, std::ios::binary | std::ios_base::in);
+        fOut.open(fName, std::ios::binary | std::ios_base::out | std::fstream::app);
     }
 
-    int read_bit() {
-        if (!fIn.is_open() || fIn.peek() == EOF) {
+    char read_bit() {
+        if (fIn.eof() || !fIn.is_open()) {
             return '-';
         }
-        if (bit_pos > 8) {
-            this->stored = fIn.get();
-            this->b = std::bitset<8>(stored);
-            this->bit_pos = 0;
-            this->read_bytes++;
-        }
 
-        return b[bit_pos++];
+        char c;
+        fIn.get(c);
+        return c;
     }
 
 
-    void write_bit(int bit) {
-        to_write_bits.set(written_bits_n , bit);
+    void write_bit(char bit) {
+        to_write_bits.set(7 - written_bits_n, bit == '1');
         written_bits_n++;
 
         if (written_bits_n >= 8) {
             unsigned long i = to_write_bits.to_ulong();
             const char c = static_cast<unsigned char>( i ); // simplest -- no checks for 8 bit bitsets
-
-            fOut.write(&c, 8);
-            std::cout << c;
+            fOut.write(&c, sizeof(char));
 
             written_bits_n = 0;
             to_write_bits = std::bitset<8>(0);
@@ -70,9 +65,17 @@ public:
     }
 
 
-
-    //read_Nbit(){
-    //}
+    void read_Nbit(char *array, int n) {
+        char bit = read_bit();
+        int count = 0;
+        while (count < n && bit != '-' ) {
+            std::cout << "Count " << count << " Bit" << bit << std::endl;
+            array[count] = bit;
+            bit = read_bit();
+            count++;
+        }
+        std::cout << "AAAAAAAAAAAAAA" << bit << "|";
+    }
 
 
     //write_Nbit(){
