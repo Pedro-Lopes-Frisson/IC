@@ -15,8 +15,10 @@ int main() {
         cout << array[i] << endl;
     }
 
-    be.write_Nbit(array, 8);
+    be.write_Nbit(array, 6);
+
 
     b.close_files();
+    be.close_files();
 }
 
