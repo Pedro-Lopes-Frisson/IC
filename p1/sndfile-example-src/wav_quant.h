@@ -1,6 +1,5 @@
-
-#ifndef WAVHIST_H
-#define WAVHIST_H
+#ifndef WAVQUANT_H
+#define WAVQUANT_H
 
 #include <iostream>
 #include <vector>
