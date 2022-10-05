@@ -35,7 +35,7 @@ public:
     }
 
     char read_bit() {
-        if (fIn.eof() || !fIn.is_open()) {
+        if (fIn.eof() || !fIn.is_open() ){
             return '-';
         }
 
@@ -55,11 +55,19 @@ public:
             fOut.write(&c, sizeof(char));
 
             written_bits_n = 0;
-            to_write_bits = std::bitset<8>(0);
+            to_write_bits.reset();
         }
     }
 
     void close_files() {
+        //  bits que ainda tem para escrever
+        if(written_bits_n > 0){
+
+            unsigned long i = to_write_bits.to_ulong();
+            const char c = static_cast<unsigned char>( i ); // simplest -- no checks for 8 bit bitsets
+            fOut.write(&c, sizeof(char));
+
+        }
         fOut.close();
         fIn.close();
     }
@@ -68,6 +76,8 @@ public:
     void read_Nbit(char *array, int n) {
         char bit = read_bit();
         int count = 0;
+
+        std::cout << "Count " << count << " Bit" << bit << std::endl;
         while (count < n && bit != '-' ) {
             std::cout << "Count " << count << " Bit" << bit << std::endl;
             array[count] = bit;
@@ -78,8 +88,14 @@ public:
     }
 
 
-    //write_Nbit(){
-    //}
+    void write_Nbit(char *array, int n){
+        int count = 0;
+        while(count < n){
+            write_bit(array[count]);
+            count++;
+        }
+
+    }
 };
 
 #endif
