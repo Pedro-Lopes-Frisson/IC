@@ -10,6 +10,10 @@ int main(int argc, char *argv[]) {
 
 	SndfileHandle sndFile { argv[argc-1] };
 
+    if(argc != 3){
+        cerr<< "Usage ./wav_quant <input-file> <output-file> where output file is a quantized version of input files"
+    }
+
 	if(sndFile.error()) {
 		cerr << "Error: invalid input file\n";
 		return 1;
@@ -30,10 +34,10 @@ int main(int argc, char *argv[]) {
 
 	WAVQuant qnt { 8 };
 
-	SndfileHandle sfhOut { "quant.wav", SFM_WRITE, sndFile.format(),
+	SndfileHandle sfhOut { argv[argc - 1], SFM_WRITE, sndFile.format(),
 	  sndFile.channels(), sndFile.samplerate() };
 
-	while((nFrames = sndFile.readf(samples.data(), FRAMES_BUFFER_SIZE))) { // 10 2
+	while((nFrames = sndFile.readf(samples.data(), FRAMES_BUFFER_SIZE))) {
 		samples.resize(nFrames * sndFile.channels());
 		qnt.apply_quantitization(samples);
 		sfhOut.writef(samples.data(), nFrames);
