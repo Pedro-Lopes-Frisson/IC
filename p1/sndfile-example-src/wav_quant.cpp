@@ -9,6 +9,7 @@ constexpr size_t FRAMES_BUFFER_SIZE = 65536; // Buffer for reading frames
 int main(int argc, char *argv[]) {
 
 	SndfileHandle sndFile { argv[argc-1] };
+    cout << argv[argc-1];
 
     if(argc != 3){
         cerr<< "Usage ./wav_quant <input-file> <output-file> where output file is a quantized version of input files"
@@ -32,7 +33,7 @@ int main(int argc, char *argv[]) {
 	size_t nFrames;
 	vector<short> samples(FRAMES_BUFFER_SIZE * sndFile.channels());
 
-	WAVQuant qnt { 8 };
+	WAVQuant qnt {  2};
 
 	SndfileHandle sfhOut { argv[argc - 1], SFM_WRITE, sndFile.format(),
 	  sndFile.channels(), sndFile.samplerate() };
