@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    SndfileHandle sndFile{argv[argc - 2]};
+    SndfileHandle sndFile{argv[argc - 1]};
     if (sndFile.error()) {
         cerr << "Error: invalid input file\n";
         return 1;
@@ -43,10 +43,10 @@ int main(int argc, char *argv[]) {
     WAVHist hist{sndFile};
 
     ofstream myfile;
-    myfile.open( argv[argc - 2] + "_quant_MID.txt");
+    myfile.open("_quant_MID.txt");
 
     ofstream myfile1;
-    myfile1.open(argv[argc - 2] + "_quant_SIDE.txt");
+    myfile1.open("_quant_SIDE.txt");
 
     while ((nFrames = sndFile.readf(samples.data(), FRAMES_BUFFER_SIZE))) { // 10 2
         samples.resize(nFrames * sndFile.channels());

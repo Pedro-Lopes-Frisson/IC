@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
     cout << argv[argc-1];
 
     if(argc != 3){
-        cerr<< "Usage ./wav_quant <input-file> <output-file> where output file is a quantized version of input files"
+        cerr<< "Usage ./wav_quant <input-file> <output-file> where output file is a quantized version of input files";
     }
 
 	if(sndFile.error()) {
