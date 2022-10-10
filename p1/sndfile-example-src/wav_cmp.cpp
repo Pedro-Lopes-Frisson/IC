@@ -57,6 +57,12 @@ int main(int argc, char *argv[]) {
 	size_t nFrames2;
 	vector<short> samples2(FRAMES_BUFFER_SIZE * sndFile2.channels());
 
+	// Potência do sinal é a soma de cada valor lido ao quadrado
+	double signal_power = 0;
+	// Potência do sinal com ruído é a soma da diferença entre as amostras dos dois ficheiros ao quadrado
+	double noise_signal_power = 0;
+	// Número de samples
+	int sample_num = 0;
 	// While loop que percorre todas as samples
 	while((nFrames = sndFile.readf(samples.data(), FRAMES_BUFFER_SIZE)) && (nFrames2 = sndFile2.readf(samples2.data(), FRAMES_BUFFER_SIZE)) ) {
 
@@ -68,17 +74,22 @@ int main(int argc, char *argv[]) {
 
 			// Calculo do power signal
 			float sample_powerSignal = pow(samples[i], 2);
-			// Calculo do power noise
-			float sample_powerNoise = pow((samples[i] - samples2[i]), 2);
-			// Calculo do Signal noise ratio per sample
-			float SNRperSample = (sample_powerSignal / sample_powerNoise);
-			// Calculo do max absolute error per sample: valor obtido - valor esperado
-			// É 1 porque se o noise for zero, samples2[i], o SNR fica = 1
-			float maxABSerror = SNRperSample - 1;
+			// Calculo do power signal com noise
+			float sample_powerNoise = pow(samples[i] - samples2[i], 2);
 
-			cout << "Sample " << samples[i] << ": SNR = " << SNRperSample << "\nMax Absolute Error = " << maxABSerror << '\n';
-			cout << '\n';
+			signal_power += sample_powerSignal;
+			noise_signal_power += sample_powerNoise;
+
+
 		}
+
+		// Calculo do SNR de cada sample
+		double SNR = signal_power / noise_signal_power;
+		// Calculo do erro assumindo que o valor ideial é 1
+		double maxAbsErr = SNR - 1;
+
+		sample_num++;
+		cout << "Sample " << sample_num << " SNR = " << SNR << "; Max Abs. Error = " << maxAbsErr << endl;
 
 	}
 
