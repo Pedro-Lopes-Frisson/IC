@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    SndfileHandle sndFile{argv[argc - 1]};
+    SndfileHandle sndFile{argv[argc - 2]};
     if (sndFile.error()) {
         cerr << "Error: invalid input file\n";
         return 1;
