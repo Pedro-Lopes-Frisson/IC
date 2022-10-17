@@ -8,6 +8,7 @@
 #include <fftw3.h>
 #include <sndfile.hh>
 #include "bitStream.h"
+#include "wav_quant.h"
 
 using namespace std;
 
@@ -105,14 +106,16 @@ int main(int argc, char *argv[]) {
         }
     ofstream encodedF{"file_enc", fstream::app};
     BitStream bitStream{"no_read", "sample.wav.enc"};
-    bitset<8> coefficients_encoded;
+    bitset<16> coefficients_encoded;
+    int value;
     for (size_t i = 0; i < x_dct.size(); i++) {
         for (auto q: x_dct[i]) {
-            cout << q << endl;
-            int v = quantize_value(&q);
-            coefficients_encoded = bitset<8>(v);
-            encodedF << coefficients_encoded;
-            encodedF << " " << v << endl;
+            value = round(q);
+            coefficients_encoded = bitset<16>(value);
+            encodedF << coefficients_encoded << " " << value << "OG value: " << q << endl;
+            for (int j = 8; j < 16; j++) {
+                bitStream.write_bit(coefficients_encoded[j]);
+            }
             for (int j = 0; j < 8; j++) {
                 bitStream.write_bit(coefficients_encoded[j]);
             }
@@ -121,23 +124,19 @@ int main(int argc, char *argv[]) {
 
     bitStream.close_files();
     cout << endl;
-    bitset<8> coefficients_decode;
+    bitset<16> coefficients_decode;
     bitStream = BitStream{"sample.wav.enc", "no_write"};
 
     ofstream decodedF{"file_dec", fstream::app};
     for (size_t i = 0; i < x_dct.size(); i++) {
         for (size_t j = 0; j < x_dct[i].size(); j++) {
             x_dct[i][j] = 0;
-            for (int k = 0; k < 8; k++) {
+            for (int k = 0; k < 16; k++) {
                 int bit = bitStream.read_bit();
-                coefficients_decode.set(7 - k, bit);
+                coefficients_decode.set(15 - k, bit);
                 decodedF << bit;
             }
-            if (coefficients_decode[0]) {
-                x_dct[i][j] = coefficients_decode.to_ulong() - pow(2, 8);
-            } else {
-                x_dct[i][j] -= coefficients_decode.to_ulong();
-            }
+            x_dct[i][j] = (int16_t) coefficients_decode.to_ulong();
             decodedF << " " << x_dct[i][j] << endl;
 
         }
@@ -164,15 +163,3 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-
-short int quantize_value(double *value) {
-    double intpart, fractpart;
-    fractpart = modf(*value, &intpart);
-    if (fractpart > 0.5) {
-        intpart++;
-    } else {
-        intpart--;
-    }
-    short int f_value = (short int) intpart;
-    return f_value;
-}
