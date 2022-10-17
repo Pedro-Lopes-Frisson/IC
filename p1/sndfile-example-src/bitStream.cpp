@@ -3,17 +3,26 @@
 #include "bitStream.h"
 
 using namespace std;
-char stored;
-bitset<8> b;
 
+//00100101
 int main() {
-    BitStream b {"binfile.bin"};
-    BitStream bO {"bin1.bin"};
-    auto bit = b.read_bit();
-    while (b.read_bit() != '-'){
-        bO.write_bit(bit);
-        bit = b.read_bit();
+    //Encoder
+    ifstream fIn("pedro_bin.txt");
+    BitStream b = BitStream("pedro.txt");
+    char c;
+    while (fIn.read(&c, sizeof(char))) {
+        b.write_bit(c);
     }
-    b.close_files();
-}
+    
+    //Decoder
+    BitStream rStream = BitStream("pedro.txt");
+    ofstream fOut("out_file");
+    auto bit = rStream.read_bit();
+    while (bit != '-') {
+        //std::cout << bit << endl;
+        fOut << bit;
+        bit = rStream.read_bit();
+    }
 
+    return 0;
+}
