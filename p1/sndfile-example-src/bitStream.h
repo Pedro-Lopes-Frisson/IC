@@ -4,126 +4,72 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
-#include <map>
-#include <bitset>
 #include <string>
 #include <bitset>
-#include <string>
-#include <sndfile.hh>
-struct Student {
-    int roll_no;
-    std::string name;
-};
 
 class BitStream {
 private:
-    std::fstream fIn;
-    std::fstream fOut;
-    char stored;
-    std::bitset<8> b;
-    int bit_pos = 0;
     int write_pos = 0;
-    int read_bytes = 0;
-    std::bitset<8> to_write_bits;
-    std::bitset<8> write_byte;
-    int written_bits_n = 0;
+    int bit_read = 9;
+    std::ifstream fIn;
+    std::ofstream fOut;
+    std::bitset<8> bits_write;
+    std::bitset<8> bits_read;
 
+    void write_to_file() {
+        unsigned long char_value = bits_write.to_ulong();
+        const char c = static_cast<char>( char_value );
+        fOut.write(&c, sizeof(char));
+        write_pos = 0;
+    };
+
+    void flush_bits() {
+        write_to_file();
+    }
 
 public:
-
-    BitStream(std::string fName){
-        fIn.open(fName, std::ios::binary | std::ios_base::in | std::ios_base::out);
-        fOut.open(fName, std::ios::binary | std::ios_base::out | std::fstream::app);
-    }
-    
-    int read_bit(){
-        if(!fIn.is_open() || fIn.peek() == EOF || fIn.eof()){
-            return '-';
-        }
-        this->stored = fIn.get();
-        this->b = std::bitset<8>(stored);
-        if(bit_pos > 8){
-            this->bit_pos = 0;
-            this->read_bytes++;
-        }
-        return b[bit_pos++];
+    BitStream(const char *fnameIn, const char *fnameOut) {
+        fIn = std::ifstream(fnameIn, std::istream::binary);
+        fOut = std::ofstream(fnameOut, std::ostream::binary | std::ostream::trunc);
     }
 
-    
-    void write_bit(char bit){
-        if(bit == '1'){
-            to_write_bits.set(write_pos);
+    int read_bit() {
+        // all bits of the byte were consumed
+        if (bit_read > 7) {
+            // read one more byte
+            char byte;
+
+
+            if (fIn.eof() || fIn.fail() || fIn.bad() || !fIn.is_open()) {
+                return -1;
+            }
+
+            fIn.read(&byte, sizeof(char));
+            bits_read = std::bitset<8>((int)byte);
+            bit_read = 0;
         }
 
-        write_pos++;
+        return bits_read[bit_read++];
+    }
 
-        if(write_pos == 8){
-        
-            write_to_file(to_write_bits);        
-        
-            to_write_bits.reset();
+    void write_bit(int bit) {
 
+        if (write_pos > 7) {
+            write_to_file();
             write_pos = 0;
         }
+        bits_write.set(7-write_pos, bit == 1);
+        write_pos++;
     }
 
     void close_files() {
-        fOut.close();
+        if (write_pos >0)
+            flush_bits();
+
         fIn.close();
+        fOut.close();
     }
 
-
-
-    void read_Nbit(int n){
-        for(int i = 0; i < n; i++){
-            read_bit();
-        }
-    }
-
-
-    void write_Nbit(char array[]){
-        int bits_to_flush = sizeof(array) % 8; // numero de bits que nao sao suficientes para formar 1 byte
-        int cont_bits = 0;
-
-        for(int i = 0; i < sizeof(array)-bits_to_flush; i++){  // escrever o byte para o ficheiro
-            if(array[i] == '1'){
-                write_byte.set(i%8);
-            }
-            cont_bits++;
-            if (cont_bits == 8){
-                write_to_file(write_byte);
-                write_byte.reset();
-                cont_bits = 0;
-            }
-        }
-
-        while(bits_to_flush != 0){ // envia o resto dos bits o resto permanece a '0' o default do bitset
-            if(array[sizeof(array) - bits_to_flush] == '1'){
-                write_byte.set(cont_bits);
-                cont_bits++;
-            }
-            bits_to_flush--;
-        }
-        if (cont_bits != 0){ // só escreve no ficheiro se houver bits para dar flush
-            write_to_file(write_byte);
-            write_byte.reset();
-            cont_bits = 0;
-        }
-    }
-
-    void write_to_file(std::bitset<8> to_write_bits){
-        //unsigned long i = to_write_bits.to_ulong();
-        //const char c = static_cast<unsigned char>( i ); // simplest -- no checks for 8 bit bitsets
-
-        std::string byt = to_write_bits.to_string();
-        char array[9] = {0};
-
-        std::copy(byt.begin(), byt.end(), array);
-
-
-        fOut.write(array, 8);
-        std::cout << array;
-    }
 };
 
 #endif
