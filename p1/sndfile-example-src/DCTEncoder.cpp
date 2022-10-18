@@ -104,11 +104,11 @@ int main(int argc, char *argv[]) {
                 x_dct[c][n * bs + k] = x[k] / (bs << 1);
 
         }
+
     ofstream encodedF{"file_enc", fstream::app};
     BitStream bitStream{"no_read", "sample.wav.enc"};
     bitset<16> coefficients_encoded;
     int value;
-    //write number of frames
     bitset<24> frames_num = bitset<24>(nFrames);
     for (int j = 16; j < 24; j++) {
         bitStream.write_bit(frames_num[j]);
@@ -172,6 +172,15 @@ int main(int argc, char *argv[]) {
     cout << endl;
     bitset<16> coefficients_decode;
     bitStream = BitStream{"sample.wav.enc", "no_write"};
+    // dispose extras
+    for (int j = 0; j < 24; ++j) {
+        bitStream.read_bit();
+    }
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 16; ++j) {
+            bitStream.read_bit();
+        }
+    }
 
     ofstream decodedF{"file_dec", fstream::app};
     for (size_t i = 0; i < x_dct.size(); i++) {
@@ -192,15 +201,16 @@ int main(int argc, char *argv[]) {
     SndfileHandle sfhOut{"Lossy.wav", SFM_WRITE, sfhIn.format(),
                          sfhIn.channels(), sfhIn.samplerate()};
 
+    cout << "FORMAT " << sfhIn.format() << endl;
+    cout << "Channels " << sfhIn.channels() << endl;
+    cout << "SR " << sfhIn.samplerate() << endl;
     x = vector<double>(bs);
-    cout << "XXXXXXXXX |" << x[0] <<"|" << endl;
     // Inverse DCT
     fftw_plan plan_i = fftw_plan_r2r_1d(bs, x.data(), x.data(), FFTW_REDFT01, FFTW_ESTIMATE);
     for (size_t n = 0; n < nBlocks; n++)
         for (size_t c = 0; c < nChannels; c++) {
             for (size_t k = 0; k < bs; k++) {
                 x[k] = x_dct[c][n * bs + k];
-                cout << x[k] << endl;
             }
 
             fftw_execute(plan_i);
