@@ -6,16 +6,7 @@
 #include <vector>
 #include <string>
 #include <bitset>
-<<<<<<< HEAD
-=======
 #include <string>
-
-//#include <sndfile.hh>
-struct Student {
-    int roll_no;
-    std::string name;
-};
->>>>>>> origin/main
 
 class BitStream {
 private:

@@ -15,8 +15,6 @@ using namespace std;
 
 short int quantize_value(double *value);
 
-void increment(bitset<8> &bitset);
-
 int main(int argc, char *argv[]) {
 
     bool verbose{false};
@@ -75,6 +73,7 @@ int main(int argc, char *argv[]) {
     size_t nChannels{static_cast<size_t>(sfhIn.channels())};
     size_t nFrames{static_cast<size_t>(sfhIn.frames())};
 
+
     // Read all samples: c1 c2 ... cn c1 c2 ... cn ...
     // Note: A frame is a group c1 c2 ... cn
     vector<short> samples(nChannels * nFrames);
@@ -89,6 +88,7 @@ int main(int argc, char *argv[]) {
     vector <vector<double>> x_dct(nChannels, vector<double>(nBlocks * bs));
 
     // Vector for holding DCT computations
+
     vector<double> x(bs);
 
     // Direct DCT
@@ -108,6 +108,51 @@ int main(int argc, char *argv[]) {
     BitStream bitStream{"no_read", "sample.wav.enc"};
     bitset<16> coefficients_encoded;
     int value;
+    //write number of frames
+    bitset<24> frames_num = bitset<24>(nFrames);
+    for (int j = 16; j < 24; j++) {
+        bitStream.write_bit(frames_num[j]);
+    }
+    for (int j = 8; j < 16; j++) {
+        bitStream.write_bit(frames_num[j]);
+    }
+    for (int j = 0; j < 8; j++) {
+        bitStream.write_bit(frames_num[j]);
+    }
+
+    //write number of channels
+    bitset<16> channel_num = bitset<16>(nChannels);
+    for (int j = 8; j < 16; j++) {
+        bitStream.write_bit(channel_num[j]);
+    }
+    for (int j = 0; j < 8; j++) {
+        bitStream.write_bit(channel_num[j]);
+    }
+
+
+    //write number of block size
+    bitset<16> bs_num = bitset<16>(bs);
+    for (int j = 8; j < 16; j++) {
+        bitStream.write_bit(bs_num[j]);
+    }
+    for (int j = 0; j < 8; j++) {
+        bitStream.write_bit(bs_num[j]);
+    }
+
+    cout << "NFrames: " << nFrames << endl;
+    cout << "NChannels: " << nChannels << endl;
+    cout << "bs: " << bs << endl;
+    cout << "SR: " << sfhIn.samplerate() << endl;
+
+    //write samplerate
+    bitset<16> bs_sr = bitset<16>(sfhIn.samplerate());
+    for (int j = 8; j < 16; j++) {
+        bitStream.write_bit(bs_sr[j]);
+    }
+    for (int j = 0; j < 8; j++) {
+        bitStream.write_bit(bs_sr[j]);
+    }
+
     for (size_t i = 0; i < x_dct.size(); i++) {
         for (auto q: x_dct[i]) {
             value = round(q);
@@ -121,6 +166,7 @@ int main(int argc, char *argv[]) {
             }
         }
     }
+
 
     bitStream.close_files();
     cout << endl;
@@ -146,12 +192,16 @@ int main(int argc, char *argv[]) {
     SndfileHandle sfhOut{"Lossy.wav", SFM_WRITE, sfhIn.format(),
                          sfhIn.channels(), sfhIn.samplerate()};
 
+    x = vector<double>(bs);
+    cout << "XXXXXXXXX |" << x[0] <<"|" << endl;
     // Inverse DCT
     fftw_plan plan_i = fftw_plan_r2r_1d(bs, x.data(), x.data(), FFTW_REDFT01, FFTW_ESTIMATE);
     for (size_t n = 0; n < nBlocks; n++)
         for (size_t c = 0; c < nChannels; c++) {
-            for (size_t k = 0; k < bs; k++)
+            for (size_t k = 0; k < bs; k++) {
                 x[k] = x_dct[c][n * bs + k];
+                cout << x[k] << endl;
+            }
 
             fftw_execute(plan_i);
             for (size_t k = 0; k < bs; k++)

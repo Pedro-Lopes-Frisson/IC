@@ -27,8 +27,8 @@ target_link_libraries (bitStream)
 add_executable (DCTEncoder DCTEncoder.cpp)
 target_link_libraries (DCTEncoder sndfile fftw3)
 
-#add_executable (DCTDecoder DCTDecoder.cpp)
-##target_link_libraries (DCTDecoder sndfile fftw3)
+add_executable (DCTDecoder DCTDecoder.cpp)
+target_link_libraries (DCTDecoder sndfile fftw3)
 
 add_executable (wav_quant wav_quant.cpp)
 target_link_libraries (wav_quant sndfile fftw3)
@@ -39,4 +39,3 @@ target_link_libraries (wav_effects sndfile fftw3)
 
 add_executable (wav_cmp wav_cmp.cpp)
 target_link_libraries (wav_cmp sndfile fftw3)
->>>>>>> origin/main
