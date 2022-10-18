@@ -20,7 +20,7 @@ private:
     std::fstream fOut;
     std::ifstream fDec;
     std::bitset<8> b;
-    char stored;        
+    char stored;   
     int bit_pos = -1;
     int write_pos = 0;
     int read_bytes = 0;
@@ -33,20 +33,17 @@ public:
 
     BitStream(std::string fName){
         fIn.open(fName, std::ios::binary );
-        fOut.open(fName, std::ios::binary | std::ios_base::out | std::fstream::trunc);
+        fOut.open(fName + "enc", std::ios::binary | std::ios_base::out | std::fstream::trunc);
     }
     
     int read_bit(){
         if(bit_pos == -1){
-            if(!fIn.is_open() || fIn.eof() || fIn.fail()){
+            if(fIn.eof() || fIn.fail() || fIn.bad() || !fIn.is_open()){
                 std::cout << "END OF FILE" << std::endl;
                 return '-';
             }
-            //stored = 'p'; //this example works
             fIn.read(&stored, sizeof(char));
-            std::cout << stored << std::endl;
             this->b = std::bitset<8>(stored);
-            std::cout << b << std::endl;
             this->bit_pos = 7;
             this->read_bytes++;
         }
@@ -81,46 +78,35 @@ public:
 
 
 
-    int* read_Nbit(int n){
-        int bit;
-        int *bits;
+    std::vector<char> read_Nbit(int n){
+        int b;
+        char bit;
+        std::vector<char> bits;
         for(int i = 0; i < n; i++){
-            bit = read_bit();
-            std::cout << bit << std::endl;
-            bits[i] = bit;
+            b = read_bit();
+            bit = b;
+            bit += 48; // ASCII code of 0 or 1
+            bits.push_back(bit);
         }
         return bits;
     }
 
-
-    void write_Nbit(char *array){
-        int bits_to_flush = sizeof(array) % 8; // numero de bits que nao sao suficientes para formar 1 byte
-        int cont_bits = 0;
-
-        for(int i = sizeof(array)-bits_to_flush; i > 0; i++){  // escrever o byte para o ficheiro
-            if(array[i] == '1'){
-                write_byte.set(i%8);
-            }
-            cont_bits++;
-            if (cont_bits == 8){
-                write_to_file();
-                write_byte.reset();
-                cont_bits = 0;
-            }
+    void write_Nbit(int n){
+        int bits_to_flush = n % 8;
+        int flush = 0;
+        char bit;
+        for(int i = 0; i < (n-bits_to_flush); i++){
+            fIn.read(&bit, sizeof(char));
+            write_bit(bit);
         }
-
-        while(bits_to_flush != 0){ // envia o resto dos bits o resto permanece a '0' o default do bitset
-            if(array[sizeof(array) - bits_to_flush] == '1'){
-                write_byte.set(cont_bits);
-                cont_bits++;
-            }
+        while(bits_to_flush != 0){
+            fIn.read(&bit, sizeof(char));
+            write_bit(bit);
             bits_to_flush--;
+            flush = 1;
         }
-        if (cont_bits != 0){ // só escreve no ficheiro se houver bits para dar flush
+        if(flush)
             write_to_file();
-            write_byte.reset();
-            cont_bits = 0;
-        }
     }
 
     void write_to_file(){
@@ -128,7 +114,6 @@ public:
         const char c = static_cast<unsigned char>( i ); // simplest -- no checks for 8 bit bitsets
 
         fOut.write(&c, sizeof(char));
-        //std::cout << c << std::endl;
     }
 };
 
