@@ -21,11 +21,12 @@ int main(int argc, char *argv[]) {
     size_t bs{1024};
     double dctFrac{0.2};
 
-    if (argc < 2) {
+    if (argc < 3) {
         cerr << "Usage: wav_dct [ -v (verbose) ]\n";
         cerr << "               [ -bs blockSize (def 1024) ]\n";
         cerr << "               [ -frac dctFraction (def 0.2) ]\n";
         cerr << "               wavFileIn \n";
+        cerr << "               encoded file out \n";
         return 1;
     }
 
@@ -47,7 +48,7 @@ int main(int argc, char *argv[]) {
             break;
         }
 
-    SndfileHandle sfhIn{argv[argc - 1]};
+    SndfileHandle sfhIn{argv[argc - 2]};
     if (sfhIn.error()) {
         cerr << "Error: invalid input file\n";
         return 1;
@@ -105,8 +106,7 @@ int main(int argc, char *argv[]) {
 
         }
 
-    ofstream encodedF{"file_enc", fstream::app};
-    BitStream bitStream{"no_read", "sample.wav.enc"};
+    BitStream bitStream{"no_read", argv[argc - 1]};
     bitset<16> coefficients_encoded;
     int value;
     bitset<24> frames_num = bitset<24>(nFrames);
@@ -157,7 +157,6 @@ int main(int argc, char *argv[]) {
         for (auto q: x_dct[i]) {
             value = round(q);
             coefficients_encoded = bitset<16>(value);
-            encodedF << coefficients_encoded << " " << value << "OG value: " << q << endl;
             for (int j = 8; j < 16; j++) {
                 bitStream.write_bit(coefficients_encoded[j]);
             }
@@ -169,57 +168,6 @@ int main(int argc, char *argv[]) {
 
 
     bitStream.close_files();
-    cout << endl;
-    bitset<16> coefficients_decode;
-    bitStream = BitStream{"sample.wav.enc", "no_write"};
-    // dispose extras
-    for (int j = 0; j < 24; ++j) {
-        bitStream.read_bit();
-    }
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 16; ++j) {
-            bitStream.read_bit();
-        }
-    }
-
-    ofstream decodedF{"file_dec", fstream::app};
-    for (size_t i = 0; i < x_dct.size(); i++) {
-        for (size_t j = 0; j < x_dct[i].size(); j++) {
-            x_dct[i][j] = 0;
-            for (int k = 0; k < 16; k++) {
-                int bit = bitStream.read_bit();
-                coefficients_decode.set(15 - k, bit);
-                decodedF << bit;
-            }
-            x_dct[i][j] = (int16_t) coefficients_decode.to_ulong();
-            decodedF << " " << x_dct[i][j] << endl;
-
-        }
-    }
-
-
-    SndfileHandle sfhOut{"Lossy.wav", SFM_WRITE, sfhIn.format(),
-                         sfhIn.channels(), sfhIn.samplerate()};
-
-    cout << "FORMAT " << sfhIn.format() << endl;
-    cout << "Channels " << sfhIn.channels() << endl;
-    cout << "SR " << sfhIn.samplerate() << endl;
-    x = vector<double>(bs);
-    // Inverse DCT
-    fftw_plan plan_i = fftw_plan_r2r_1d(bs, x.data(), x.data(), FFTW_REDFT01, FFTW_ESTIMATE);
-    for (size_t n = 0; n < nBlocks; n++)
-        for (size_t c = 0; c < nChannels; c++) {
-            for (size_t k = 0; k < bs; k++) {
-                x[k] = x_dct[c][n * bs + k];
-            }
-
-            fftw_execute(plan_i);
-            for (size_t k = 0; k < bs; k++)
-                samples[(n * bs + k) * nChannels + c] = static_cast<short>(round(x[k]));
-
-        }
-
-    sfhOut.writef(samples.data(), sfhIn.frames());
     return 0;
 }
 
