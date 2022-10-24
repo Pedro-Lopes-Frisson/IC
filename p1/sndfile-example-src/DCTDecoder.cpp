@@ -19,6 +19,7 @@ int main(int argc, char *argv[]) {
     size_t nFrames{1};
     size_t bs{1024};
     auto sr{441000};
+    double dctFrac{0};
 
     if (argc < 3) {
         cerr << "Usage: wav_dct number_of_channels\n";
@@ -34,7 +35,7 @@ int main(int argc, char *argv[]) {
         bits_Frames[23 - j] = bitStream.read_bit();
     }
     nFrames = bits_Frames.to_ulong();
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 4; i++) {
         bits.reset();
         for (int j = 0; j < 16; ++j) {
             bits[15 - j] = bitStream.read_bit();
@@ -45,11 +46,14 @@ int main(int argc, char *argv[]) {
             bs = bits.to_ulong();
         if (i == 2)
             sr = bits.to_ulong();
+        if (i == 3)
+            dctFrac = ((double) bits.to_ulong()) / 100;
     }
     cout << "NFrames: " << nFrames << endl;
     cout << "NChannels: " << nChannels << endl;
     cout << "bs: " << bs << endl;
     cout << "SR: " << sr << endl;
+    cout << "DCT Frac: " << dctFrac << endl;
 
 
     vector<short> samples(nChannels * nFrames);
@@ -65,17 +69,20 @@ int main(int argc, char *argv[]) {
     // Vector for holding DCT computations
     vector<double> x(bs);
 
-
-    cout << endl;
+    cout << x_dct[0][0];
     bitset<16> coefficients_decode;
-    for (size_t i = 0; i < x_dct.size(); i++) {
-        for (size_t j = 0; j < x_dct[i].size(); j++) {
-            x_dct[i][j] = 0;
-            for (int k = 0; k < 16; k++) {
-                int bit = bitStream.read_bit();
-                coefficients_decode.set(15 - k, bit);
+
+    for (size_t n = 0; n < nBlocks; n++) {
+        for (size_t c = 0; c < nChannels; c++) {
+            for (size_t k = 0; k < bs * dctFrac; k++) {
+                for (int h = 0; h < 16; h++) {
+                    int bit = bitStream.read_bit();
+                    coefficients_decode.set(15 - h, bit);
+                }
+                cout << (int16_t) coefficients_decode.to_ulong() << endl;
+                x_dct[c][n * bs + k] = (int16_t) coefficients_decode.to_ulong();
             }
-            x_dct[i][j] = (int16_t) coefficients_decode.to_ulong();
+
         }
     }
     SndfileHandle sfhOut{argv[argc - 1], SFM_WRITE, 65538,

@@ -91,6 +91,7 @@ int main(int argc, char *argv[]) {
     // Vector for holding DCT computations
 
     vector<double> x(bs);
+    long int written_coefficients = 0;
 
     // Direct DCT
     fftw_plan plan_d = fftw_plan_r2r_1d(bs, x.data(), x.data(), FFTW_REDFT10, FFTW_ESTIMATE);
@@ -101,10 +102,16 @@ int main(int argc, char *argv[]) {
 
             fftw_execute(plan_d);
             // Keep only "dctFrac" of the "low frequency" coefficients
-            for (size_t k = 0; k < bs * dctFrac; k++)
+            for (size_t k = 0; k < bs * dctFrac; k++) {
                 x_dct[c][n * bs + k] = x[k] / (bs << 1);
+            }
 
         }
+    cout << "[";
+    for (auto val : x_dct[0]){
+        cout << val << ",";
+    }
+    cout << "]" << endl << endl;
 
     BitStream bitStream{"no_read", argv[argc - 1]};
     bitset<16> coefficients_encoded;
@@ -143,6 +150,7 @@ int main(int argc, char *argv[]) {
     cout << "NChannels: " << nChannels << endl;
     cout << "bs: " << bs << endl;
     cout << "SR: " << sfhIn.samplerate() << endl;
+    cout << "W C: " << dctFrac << endl;
 
     //write samplerate
     bitset<16> bs_sr = bitset<16>(sfhIn.samplerate());
@@ -153,18 +161,31 @@ int main(int argc, char *argv[]) {
         bitStream.write_bit(bs_sr[j]);
     }
 
-    for (size_t i = 0; i < x_dct.size(); i++) {
-        for (auto q: x_dct[i]) {
-            value = round(q);
-            coefficients_encoded = bitset<16>(value);
-            for (int j = 8; j < 16; j++) {
-                bitStream.write_bit(coefficients_encoded[j]);
-            }
-            for (int j = 0; j < 8; j++) {
-                bitStream.write_bit(coefficients_encoded[j]);
-            }
-        }
+    bitset<16> dct_frac_bits = bitset<16>(round(dctFrac * 100));
+    cout << "DCT Bits : " << dct_frac_bits << endl;
+    for (int j = 8; j < 16; j++) {
+        bitStream.write_bit(dct_frac_bits[j]);
     }
+    for (int j = 0; j < 8; j++) {
+        bitStream.write_bit(dct_frac_bits[j]);
+    }
+
+    for (size_t n = 0; n < nBlocks; n++)
+        for (size_t c = 0; c < nChannels; c++) {
+            // Keep only "dctFrac" of the "low frequency" coefficients
+            for (size_t k = 0; k < bs * dctFrac; k++) {
+                auto value = round(x_dct[c][n * bs + k]);
+                coefficients_encoded = bitset<16>(value);
+                for (int k = 8; k < 16; k++) {
+                    bitStream.write_bit(coefficients_encoded[k]);
+                }
+                for (int k = 0; k < 8; k++) {
+                    bitStream.write_bit(coefficients_encoded[k]);
+                }
+            }
+
+        }
+
 
 
     bitStream.close_files();
