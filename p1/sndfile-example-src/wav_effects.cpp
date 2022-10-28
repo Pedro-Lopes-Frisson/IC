@@ -63,8 +63,8 @@ void wav_ampRecude(ifstream& wav_file, ofstream& out_file){
 int main() {
 
 	// Introduzir echo
-	fstream filin("/home/andre/Desktop/4º ANO/IC/Projeto1/IC/p1/sndfile-example-src/sample.wav", ios::in|ios::binary);
-	fstream fileout_echo("/home/andre/Desktop/4º ANO/IC/Projeto1/IC/p1/sndfile-example-src/sample_echo.wav",ios::out| ios::binary);
+	fstream filin("sample.wav", ios::in|ios::binary);
+	fstream fileout_echo("sample_echo.wav",ios::out| ios::binary);
 
 	wav_echo2_16(filin, fileout_echo, 14000, 0.8);
 
@@ -78,6 +78,3 @@ int main() {
 	return 0;
 
 }
-
-// https://stackoverflow.com/questions/23745811/adding-echo-effect-to-a-wav-file
-// https://stackoverflow.com/questions/57709983/distorted-output-during-processing-wav-file
