@@ -8,12 +8,12 @@ constexpr size_t FRAMES_BUFFER_SIZE = 65536; // Buffer for reading frames
 
 int main(int argc, char *argv[]) {
 
-	SndfileHandle sndFile { argv[argc-3] };
 
-    if(argc != 4){
+    if(argc != 3){
         cerr<< "Usage ./wav_quant <input-file> <output-file> where output file is a quantized version of input files";
     }
 
+	SndfileHandle sndFile { argv[argc-3] };
 	if(sndFile.error()) {
 		cerr << "Error: invalid input file\n";
 		return 1;

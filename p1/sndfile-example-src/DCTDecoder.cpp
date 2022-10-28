@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
     double dctFrac{0};
 
     if (argc < 3) {
-        cerr << "Usage: wav_dct number_of_channels\n";
+        cerr << "Usage: " << argv[0] << "number_of_channels\n";
         cerr << "                        coded_wav\n";
         cerr << "                        wavOut\n";
         return 1;

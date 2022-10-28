@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
     double dctFrac{0.2};
 
     if (argc < 3) {
-        cerr << "Usage: wav_dct [ -v (verbose) ]\n";
+        cerr << "Usage: " << argv[0] << " [ -v (verbose) ]\n";
         cerr << "               [ -bs blockSize (def 1024) ]\n";
         cerr << "               [ -frac dctFraction (def 0.2) ]\n";
         cerr << "               wavFileIn \n";
