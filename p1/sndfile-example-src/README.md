@@ -10,3 +10,5 @@ Usage: wav_cp [ -v (verbose) ] wavFileIn wavFileOut
 Usage: wav_dct [ -v (verbose) ] [ -bs blockSize (def 1024) ] [ -frac dctFraction (def 0.2) ] wavFileIn wavFileOut
 
 Usage: ../sndfile-example-bin/wav_hist <input file> <channel>
+
+Usage ./wav_quant <input-file> <output-file> where output file is a quantized version of input files
