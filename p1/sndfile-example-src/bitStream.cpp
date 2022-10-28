@@ -1,6 +1,7 @@
 #include <fstream>
 #include <bitset>
 #include "bitStream.h"
+#include <string>
 
 using namespace std;
 
@@ -13,7 +14,7 @@ int main() {
     while (fIn.read(&c, sizeof(char))) {
         b.write_bit(c);
     }
-    
+
     //Decoder
     BitStream rStream = BitStream("pedro.txt");
     ofstream fOut("out_file");
@@ -23,26 +24,30 @@ int main() {
         fOut << bit;
         bit = rStream.read_bit();
     }
-    
-    // WRITE N BIT
-    BitStream b = BitStream("pedro_bin.txt");
-    int write_bits;
-    cout << "How many bits to write?" << endl;
-    cin >> write_bits;
-    b.write_Nbit(write_bits);
 
-    // READ N BIT
-    BitStream rStream = BitStream("pedro.txt");
-    ofstream fOut("out_file");
-    int read_bits;
-    cout << "How many bits to read?" << endl;
-    cin >> read_bits;
-    vector<char> bits_read = rStream.read_Nbit(read_bits);
-    for (int i = 0; i < (int)bits_read.size(); i++) {
-        fOut << bits_read[i];
-        //cout << bits_read[i] << endl;
-    }
-    
-    
+
+    b = BitStream("NBits.txt");
+    bitset<16> bits = bitset<16>();
+    bits.set(0,0);
+    bits.set(1,1);
+    bits.set(2,1);
+    bits.set(3,1);
+    bits.set(4,0);
+    bits.set(5,0);
+    bits.set(6,0);
+    bits.set(7,0);
+    bits.set(8,0);
+    bits.set(9,1);
+    bits.set(10,1);
+    bits.set(11,0);
+    bits.set(12,0);
+    bits.set(13,1);
+    bits.set(14,0);
+    bits.set(15,1);
+    b.write_Nbit(bits);
+    b.close_files();
+
+
+
     return 0;
 }

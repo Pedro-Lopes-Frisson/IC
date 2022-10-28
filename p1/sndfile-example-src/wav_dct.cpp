@@ -117,4 +117,3 @@ int main(int argc, char *argv[]) {
 	sfhOut.writef(samples.data(), sfhIn.frames());
 	return 0;
 }
-
