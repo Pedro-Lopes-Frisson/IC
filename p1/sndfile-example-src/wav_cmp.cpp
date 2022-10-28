@@ -3,6 +3,7 @@
 #include <sndfile.hh>
 #include "wav_hist.h"
 #include <cmath>
+#include <bits/stdc++.h>
 
 using namespace std;
 
@@ -61,8 +62,8 @@ int main(int argc, char *argv[]) {
 	double signal_power = 0;
 	// Potência do sinal com ruído é a soma da diferença entre as amostras dos dois ficheiros ao quadrado
 	double noise_signal_power = 0;
-	// Número de samples
-	int sample_num = 0;
+	// Vetor que armazena os erros absolutos das samples
+	vector<double> sample_abs_error;
 	// While loop que percorre todas as samples
 	while((nFrames = sndFile.readf(samples.data(), FRAMES_BUFFER_SIZE)) && (nFrames2 = sndFile2.readf(samples2.data(), FRAMES_BUFFER_SIZE)) ) {
 
@@ -80,21 +81,20 @@ int main(int argc, char *argv[]) {
 			signal_power += sample_powerSignal;
 			noise_signal_power += sample_powerNoise;
 
+			double AbsErr = samples[i] - samples2[i];
+			sample_abs_error.push_back(AbsErr);
 
 		}
 
-		// Calculo do SNR de cada sample
-		double SNR = signal_power / noise_signal_power;
-		// Calculo do erro assumindo que o valor ideial é 1
-		double maxAbsErr = SNR - 1;
-
-		sample_num++;
-		cout << "Sample " << sample_num << " SNR = " << SNR << "; Max Abs. Error = " << maxAbsErr << endl;
 
 	}
+
+	// Calculo do SNR de cada sample
+	double SNR = 10 * log(signal_power / noise_signal_power);
+	cout << "SNR = " << SNR << "\nMax Abs. Error = " << *max_element(sample_abs_error.begin(), sample_abs_error.end()) << '\n';
 
 	return 0;
 
 }
 
-// RUN: ../sndfile-example-bin/wav_cmp sample.wav quant.wav 
+// RUN: ../sndfile-example-bin/wav_cmp sample.wav quant.wav
