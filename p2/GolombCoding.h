@@ -5,4 +5,120 @@
 #ifndef P2_GOLOMBCODING_H
 #define P2_GOLOMBCODING_H
 
+#include <string>
+#include <cmath>
+#include <vector>
+#include <bitset>
+#include <iostream>
+
+class GolombCoder {
+private:
+  int M;
+  
+  void getBits(int n, std::vector<char> &bits, int num_bits) {
+    // counter for binary array
+    int i = num_bits - 1;
+    while (n > 0) {
+      
+      // storing remainder in binary array
+      if (n % 2 == 0)
+        
+        bits[i] = '0';
+      else
+        bits[i] = '1';
+      n = n / 2;
+      i--;
+    }
+    
+    for (; i >= 0; i--) {
+      bits[i] = '0';
+    }
+    //std::cout << bits.data() << std::endl ;
+    
+  }
+
+public:
+  GolombCoder(int M) {
+    this->M = M;
+  }
+  
+  int decode_int(int *decoded_num, std::string str) {
+    size_t i = 0;
+    int found = 0; // if 0 '0' was nhot found
+    int q = 0; // quotient
+    for (i = 0; i < str.size(); i++) {
+      if (str[i] == '0') {
+        // break counting loop
+        found = 1;
+        break;
+      } else // count 1's before 0
+        q++;
+    }
+    
+    if (found == 0) {
+      std::cerr << "No Unary code was found" << std::endl;
+      return -1;
+    }
+    
+    int remainder = 0;
+    
+    for (i = i + 1; i < str.size(); i++) {
+      if (str[i] == '1')
+        remainder += pow(2, str.size() - i - 1);
+    }
+    //std::cout << *decoded_num;
+    *decoded_num = (M * q) + remainder;
+    if (*decoded_num % 2 == 0)
+      *decoded_num /= 2;
+    else
+      *decoded_num = - (*decoded_num - 1) / 2;
+    
+    return 0;
+    
+    return 0;
+  }
+  
+  void encode_int(int num, std::string &str) {
+    if (num > 0)
+      num = 2 * num;
+    else
+      num = (abs(num )* 2) + 1;
+    
+    int quotient = num / M;
+    int remainder = num % M;
+    std::vector<char> quotient_enc;
+    //allocate q + 1 bits
+    quotient_enc.resize(quotient + 1);
+    //Write string with q 1's
+    for (int n = 0; n <= quotient; n++)
+      quotient_enc[n] = '1';
+    // write one 0
+    quotient_enc[quotient] = '0';
+    // end of quotient code
+    
+    // start remainder code
+    int b = floor(log2(M));
+    std::vector<char> bits_remainder;
+    if (remainder >= pow(2, b + 1) - M) {
+      b++;
+    }
+    bits_remainder.resize(b);
+    getBits(remainder, bits_remainder, b);
+    
+    str.resize(quotient_enc.size() + bits_remainder.size());
+    int i = 0;
+    for (auto c: quotient_enc) {
+      str[i] = c;
+      i++;
+    }
+    
+    for (auto c: bits_remainder) {
+      str[i] = c;
+      i++;
+    }
+    return; // str_enc
+  }
+  
+};
+
 #endif //P2_GOLOMBCODING_H
