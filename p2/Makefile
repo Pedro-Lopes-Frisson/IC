@@ -3,4 +3,4 @@ all:
 	  if [ ! -d sndfile-example-bin ]; then mkdir sndfile-example-bin; fi; cmake ..; make)
 
 clean:
-	rm -rf build ../sndfile-example-bin
+	rm -rf ./build

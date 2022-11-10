@@ -4,7 +4,7 @@ find_package( OpenCV REQUIRED )
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 
 SET (CMAKE_BUILD_TYPE "Release")
-#SET (CMAKE_BUILD_TYPE "Debug")
+SET (CMAKE_BUILD_TYPE "Debug")
 
 SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++17")
 SET (CMAKE_CXX_FLAGS_RELEASE "-O3")
@@ -15,3 +15,9 @@ SET (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BASE_DIR}/build/p2)
 
 add_executable( exercicio1 exercicio1.cpp )
 target_link_libraries( exercicio1 ${OpenCV_LIBS} )
+
+add_executable( exercicio2 exercicio2.cpp )
+target_link_libraries( exercicio2 ${OpenCV_LIBS} )
+
+add_executable( GolombCoding GolombCoding.cpp )
+target_link_libraries( GolombCoding  )
