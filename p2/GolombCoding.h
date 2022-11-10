@@ -10,30 +10,31 @@
 #include <vector>
 #include <bitset>
 #include <iostream>
+#include <stdlib.h>
 
 class GolombCoder {
 private:
   int M;
   
-  void getBits(int n, std::vector<char> &bits, int num_bits) {
+  void getBits(int n, std::vector<char> &bits) {
     // counter for binary array
-    int i = num_bits - 1;
-    while (n > 0) {
+    int i = bits.size() - 1;
+    while (n > 0 && i >= 0) {
       
       // storing remainder in binary array
-      if (n % 2 == 0)
-        
+      if (n % 2 == 0) {
         bits[i] = '0';
-      else
+      } else {
         bits[i] = '1';
+      }
+      
       n = n / 2;
       i--;
     }
     
-    for (; i >= 0; i--) {
+    for (; i >= 0; i--)
       bits[i] = '0';
-    }
-    //std::cout << bits.data() << std::endl ;
+    
     
   }
 
@@ -43,6 +44,7 @@ public:
   }
   
   int decode_int(int *decoded_num, std::string str) {
+  
     size_t i = 0;
     int found = 0; // if 0 '0' was nhot found
     int q = 0; // quotient
@@ -60,29 +62,48 @@ public:
       return -1;
     }
     
-    int remainder = 0;
     
-    for (i = i + 1; i < str.size(); i++) {
-      if (str[i] == '1')
-        remainder += pow(2, str.size() - i - 1);
+    double k1 = log2(M);
+    int k = ceil(k1);
+    int c = pow(2, k) - M;
+    
+    
+    std::string rem = str.substr(i + 1, k - 1);
+    
+  
+    long rem_bin = 0;
+    for (int l = 0 ; l < rem.size(); l++) {
+      if (rem[l] == '1') {
+        rem_bin += pow(2, (rem.size()  - l - 1));
+      }
     }
-    //std::cout << *decoded_num;
-    *decoded_num = (M * q) + remainder;
-    if (*decoded_num % 2 == 0)
-      *decoded_num /= 2;
-    else
-      *decoded_num = - (*decoded_num - 1) / 2;
     
-    return 0;
+    
+    if (rem_bin < c) {
+      *decoded_num = M * q + rem_bin;
+    } else {
+      rem = str.substr(i + 1, k);
+      rem_bin = 0;
+      for (int l = 0 ; l < rem.size(); l++) {
+        if (rem[l] == '1') {
+          rem_bin += pow(2, (rem.size()  - l - 1));
+        }
+      }
+      *decoded_num = M * q + rem_bin - c;
+    }
+    
+    
     
     return 0;
   }
   
   void encode_int(int num, std::string &str) {
+    /*
     if (num > 0)
       num = 2 * num;
     else
       num = (abs(num )* 2) + 1;
+      */
     
     int quotient = num / M;
     int remainder = num % M;
@@ -90,23 +111,29 @@ public:
     //allocate q + 1 bits
     quotient_enc.resize(quotient + 1);
     //Write string with q 1's
-    for (int n = 0; n <= quotient; n++)
+    for (int n = 0; n < quotient_enc.size() - 1; n++)
       quotient_enc[n] = '1';
     // write one 0
-    quotient_enc[quotient] = '0';
+    quotient_enc[quotient_enc.size() - 1] = '0';
     // end of quotient code
     
     // start remainder code
-    int b = floor(log2(M));
     std::vector<char> bits_remainder;
-    if (remainder >= pow(2, b + 1) - M) {
-      b++;
+    double k1 = log2(M);
+    int k = ceil(k1);
+    int c = pow(2, k) - M;
+    
+    if (remainder >= 0 and remainder < c) {
+      bits_remainder.resize(k - 1);
+      getBits(remainder, bits_remainder);
+    } else {
+      bits_remainder.resize(k);
+      getBits(remainder + c, bits_remainder);
     }
-    bits_remainder.resize(b);
-    getBits(remainder, bits_remainder, b);
     
     str.resize(quotient_enc.size() + bits_remainder.size());
     int i = 0;
+    
     for (auto c: quotient_enc) {
       str[i] = c;
       i++;

@@ -1,7 +1,6 @@
 //
 // Created by whoknows on 10/31/22.
 //
-
 #include "GolombCoding.h"
 #include <string>
 using namespace std;
@@ -9,15 +8,20 @@ using namespace std;
 int main() {
   GolombCoder n = GolombCoder(10);
   string bits;
-  n.encode_int(-42, bits);
-  int num;
-  cout << bits << "\t";
-  n.decode_int( &num,bits);
-  cout << num << endl;
+  int og_nums[8] = {1,12,23,34,45,56,67,89};
+  int num_dec[8];
+  for(size_t i = 0; i < 8; i++){
+    cout << "Num " << og_nums[i] ;
+    n.encode_int(og_nums[i], bits);
   
-  n.encode_int(42, bits);
-  cout << bits << "\t";
-  n.decode_int( &num,bits);
-  cout << num << endl;
+    cout << "\tGolombCode: " << bits << endl;
+    n.decode_int( &(num_dec[i]),bits);
+  
+  }
+  
+  for(size_t i = 0; i < 8; i++){
+    cout << "Num " << og_nums[i] << " Decoded: " << num_dec[i] << endl;
+  }
+  
   return 0;
 }
