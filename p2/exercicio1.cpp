@@ -21,29 +21,26 @@ int main(int argc, char *argv[]){
         return -1;
     }
 
-    Mat img_out = Mat::zeros(Size(image.cols,image.rows),img_in.type());
-
-    int startrow, startcolumn;
-    
-    startrow = 0;
-    startcolumn = 0;
-
-    int rows, columns, i, j, r = 0, c;
+    Mat img_out = Mat::zeros(Size(img_in.cols,img_in.rows),img_in.type());
 
     Size s = img_in.size();
-    rows = s.height;
-    columns = s.width;
 
-    for(i = startrow; i < startrow + rows; i++){
-        c = 0;
-        for(j = startcolumn; j < startcolumn + columns; j++){
-            img_out.at<Vec3b>(i,j) = img_in.at<Vec3b>(r,c);
-            c++;
+    // Percorre todos os pixeis da imagem
+    for(int i = 0; i < s.height; i++){
+        for(int j = 0; j < s.width; j++){
+            img_out.at<Vec3b>(i,j) = img_in.at<Vec3b>(i,j);
         }
-        r++;
     }
+
     imwrite(output_file, img_out);
-    imshow("Output", img_out);
+
+    namedWindow("Imagem Original", 1);
+    imshow("Imagem Original", img_in);
+
+    namedWindow("Imagem Copiada", 1);
+    imshow("Imagem Copiada", img_out);
+
     waitKey(0);
+
     return 0;
 }
