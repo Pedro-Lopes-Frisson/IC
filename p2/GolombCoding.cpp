@@ -8,7 +8,7 @@ using namespace std;
 int main() {
   GolombCoder n = GolombCoder(10);
   string bits;
-  int og_nums[11] = {1,12,23,34,45,56,67,89, -19, -22, -44};
+  int og_nums[11] = {10,0,23,34,45,56,67,89, -19, -22, -44};
   int num_dec[11];
   for(size_t i = 0; i < 11; i++){
     cout << "Num " << og_nums[i] ;

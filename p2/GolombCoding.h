@@ -104,7 +104,7 @@ public:
   }
   
   void encode_int(int num, std::string &str) {
-    if (num > 0) {
+    if (num >= 0) {
       num = 2 * num;
     }
     else {
