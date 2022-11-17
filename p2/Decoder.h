@@ -10,11 +10,12 @@
 #include <iostream>
 #include <cmath>
 
+
 class Decoder {
 private:
 	GolombCoder coder{};
 
-	void decode_residual(short value, std::string &bits) {
+	void decode_residual(int *value, std::string &bits) {
 	  	int sucss;
 	    sucss = coder.decode_int(value, bits);
 
@@ -22,12 +23,6 @@ private:
 	    	std::cerr << "Sample decoding could not be performed!" << std::endl;
 	    }
 	};
-
-	void read_from_file(BitStream &bitStream){
-
-	}
-
-
 
 
 public:
@@ -39,37 +34,64 @@ public:
 	void decode_Encoded_audio_file(std::string inFile, std::string outFile){
 
 		// Abrir o ficheiro codificado
-		BitStream bitStream = BitStream{outFile};
-		
-		// Para ler os bits do k
-		bitset<8> read_k_bits = bitset<8>(0);
+		BitStream bitStream = BitStream{inFile};
+		// Vetor para armazenar os residuos
+		std::vector<int> residuos;
+		// Ler cada um dos bits
+		auto bit = bitStream.read_bit();
+		// Percorrer todos os bits do ficheiro
+		std::string k_bits;
+		// Bandeira que simboliza que o qr_bits ainda nao esta cheio
+		int flag = 0;
+		// Quociente do M ideal é sempre 0, entao é o bit logo asseguir ao k
+		// String para o  q + r
+		std::string qr_bits;
+		// Inicializar o k
+		int k;
 
-		// Buscar o k
-		for (int j = 0; j < 9; ++j) {
-			if(bitStream.read_bit() == 0){
-				break;
+		while (bit != '-'){
+			std::cout << bit << std::endl;
+			// ENCONTRAR O K
+			if (bit != '0' && flag == 0){
+				k_bits = k_bits + std::to_string(bit);
 			}
+			// Já lemos o K
 			else{
-				read_k_bits[j] = bitStream.read_bit();
+				if (flag == 0){
+					// Metemos o k a inteiro e damos reset à k_bits
+					k = stoi(k_bits);
+					std::string k_bits;
+					// Calculamos o M
+					//int M = pow(2, k);
+					// Adicionamos o bit do quociente
+					qr_bits = qr_bits + std::to_string(bit);
+					flag = 1;
+				}
+				else { 
+					qr_bits = qr_bits + std::to_string(bit);
+					// Já temos o r todo
+					if(qr_bits.size() == k){
+						// Damos reset à flag
+						flag = 0;
+						// Criar o inteiro que nos vai dar o residual descodificado
+						int residual;
+						int sucss = coder.decode_int( &residual, qr_bits);
+						// Reset ao array
+						std::string qr_bits;
+						//Reset ao k
+						int k;
+						// Escrever no vetor dos residuos
+						residuos.push_back(residual);
+						std::cout << residuos.data() << std::endl;
+					}
+				}
 			}
 
-    	}
-    	// Tranformar o k em um inteiro
-    	std::string k;
-    	for (auto b : read_k_bits){
-    		k = k + std::to_string(b);
-    	}
-
-    	// Obter o M
-    	int M = pow(2, k);
-    	// Para ler os bits do q e do r
-    	bitset<std::to_string(k)> read_qr_bits
-    	// Para guardar os bits do q e r em string para depois usar o decode_int do golomb
-    	std::string str_qr;
-
+		}
+		// Escrever no ficheiro .wav
+		//SndfileHandle sfhOut{outFile};
+		//sfhOut.writef(residuos.data());
 	}
-
-
 
 
 };

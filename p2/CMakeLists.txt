@@ -26,3 +26,6 @@ target_link_libraries( GolombCoding  )
 
 add_executable (Encoder Encoder.cpp)
 target_link_libraries (Encoder sndfile)
+
+add_executable (Decoder Decoder.cpp)
+target_link_libraries (Decoder sndfile)
