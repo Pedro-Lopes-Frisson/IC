@@ -1,3 +1,5 @@
+
+
 cmake_minimum_required(VERSION 3.16)
 project( Projeto2 )
 find_package( OpenCV REQUIRED )
@@ -19,5 +21,8 @@ target_link_libraries( exercicio1 ${OpenCV_LIBS} )
 add_executable( exercicio2 exercicio2.cpp )
 target_link_libraries( exercicio2 ${OpenCV_LIBS} )
 
-add_executable( GolombCoding GolombCoding.cpp )
+add_executable( GolombCoding GolombCoding.cpp)
 target_link_libraries( GolombCoding  )
+
+add_executable (Encoder Encoder.cpp)
+target_link_libraries (Encoder sndfile)

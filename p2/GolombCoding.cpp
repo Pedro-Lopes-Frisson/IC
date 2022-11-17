@@ -6,12 +6,13 @@
 using namespace std;
 
 int main() {
-  GolombCoder n = GolombCoder(10);
+  //GolombCoder n = GolombCoder(10);
+  GolombCoder n = GolombCoder();
   string bits;
-  int og_nums[11] = {1,12,23,34,45,56,67,89, -19, -22, -44};
+  int og_nums[11] = {0,12,23,34,45,56,67,89, -19, -22, -44};
   int num_dec[11];
   for(size_t i = 0; i < 11; i++){
-    cout << "Num " << og_nums[i] ;
+    cout << "Num " << og_nums[i];
     n.encode_int(og_nums[i], bits);
   
     cout << "\tGolombCode: " << bits << endl;
@@ -22,6 +23,6 @@ int main() {
   for(size_t i = 0; i < 11; i++){
     cout << "Num " << og_nums[i] << " Decoded: " << num_dec[i] << endl;
   }
-  
+
   return 0;
 }

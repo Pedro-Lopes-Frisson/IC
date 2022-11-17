@@ -14,7 +14,7 @@
 
 class GolombCoder {
 private:
-  int M;
+  //int M;
   
   void getBits(int n, std::vector<char> &bits) {
     // counter for binary array
@@ -39,16 +39,33 @@ private:
   }
 
 public:
-  GolombCoder(int M) {
-    this->M = M;
+  //GolombCoder(int M) {
+  //  this->M = M;
+  //}
+  
+  GolombCoder() {
   }
   
+
+  //int decode_int(int *decoded_num, std::string str, int M) {
   int decode_int(int *decoded_num, std::string str) {
     
     size_t i = 0;
     int found = 0; // if 0 '0' was nhot found
     int q = 0; // quotient
-    for (i = 0; i < str.size(); i++) {
+    std::string str_k;
+
+    for (i; i < str.size(); i++){
+      if (str[i] == '0') {
+        break;
+      }
+      else{
+        str_k = str_k + str[i];
+      }
+    }
+
+    //for (i = 0; i < str.size(); i++) {
+    for (i; i < str.size(); i++) {
       if (str[i] == '0') {
         // break counting loop
         found = 1;
@@ -62,9 +79,8 @@ public:
       return -1;
     }
     
-    
-    double k1 = log2(M);
-    int k = ceil(k1);
+    int k = stoi(str_k);
+    int M = pow(2, k);
     int c = pow(2, k) - M;
     
     
@@ -102,7 +118,9 @@ public:
     
     return 0;
   }
-  
+
+
+
   void encode_int(int num, std::string &str) {
     if (num > 0) {
       num = 2 * num;
@@ -111,7 +129,11 @@ public:
       num = (abs(num) * 2) + 1;
     }
     
-    
+    // Calculamos o M dinamicamente
+    double k1= log2(num);
+    int k = floor(k1) + 1;
+    int M = pow(2, k);
+
     int quotient = num / M;
     int remainder = num % M;
     std::vector<char> quotient_enc;
@@ -126,8 +148,6 @@ public:
     
     // start remainder code
     std::vector<char> bits_remainder;
-    double k1 = log2(M);
-    int k = ceil(k1);
     int c = pow(2, k) - M;
     
     if (remainder >= 0 and remainder < c) {
@@ -138,9 +158,19 @@ public:
       getBits(remainder + c, bits_remainder);
     }
     
-    str.resize(quotient_enc.size() + bits_remainder.size());
+    // Concatenar o K
+    std::string str_k = std::to_string(k);
+
+
+    //str.resize(quotient_enc.size() + bits_remainder.size());
+    str.resize(str_k.size() + quotient_enc.size() + bits_remainder.size());
     int i = 0;
     
+    for (auto c: str_k) {
+      str[i] = c;
+      i++;
+    }
+
     for (auto c: quotient_enc) {
       str[i] = c;
       i++;
@@ -150,7 +180,9 @@ public:
       str[i] = c;
       i++;
     }
-    return; // str_enc
+
+    //return M; 
+    return;// str_enc
   }
   
 };
