@@ -104,7 +104,7 @@ public:
   }
   
   void encode_int(int num, std::string &str) {
-    if (num > 0) {
+    if (num >= 0) {
       num = 2 * num;
     }
     else {
@@ -145,11 +145,14 @@ public:
       str[i] = c;
       i++;
     }
-    
+  
+    std::cout  << std::endl;
     for (auto c: bits_remainder) {
       str[i] = c;
+      std::cout << c;
       i++;
     }
+    std::cout  << std::endl;
     return; // str_enc
   }
   

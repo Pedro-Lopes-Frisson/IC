@@ -16,6 +16,8 @@ SET (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BASE_DIR}/build/p2)
 add_executable( exercicio1 exercicio1.cpp )
 target_link_libraries( exercicio1 ${OpenCV_LIBS} )
 
+add_library( BitStream BitStream.cpp BitStream.h )
+
 add_executable( exercicio2 exercicio2.cpp )
 target_link_libraries( exercicio2 ${OpenCV_LIBS} )
 
