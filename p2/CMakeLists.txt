@@ -18,8 +18,11 @@ target_link_libraries( exercicio1 ${OpenCV_LIBS} )
 
 add_library( BitStream BitStream.cpp BitStream.h )
 
+add_executable( bitStream bitStream.cpp )
+target_link_libraries( bitStream BitStream )
+
 add_executable( exercicio2 exercicio2.cpp )
 target_link_libraries( exercicio2 ${OpenCV_LIBS} )
 
-add_executable( GolombCoding GolombCoding.cpp )
-target_link_libraries( GolombCoding  )
+#add_executable( GolombCoding GolombCoding.cpp )
+#target_link_libraries( GolombCoding  )
