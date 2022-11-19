@@ -39,16 +39,31 @@ private:
   }
 
 public:
-  GolombCoder(int M) {
-    this->M = M;
-  }
+  //GolombCoder(int M) {
+  //  this->M = M;
+  //}
 
+  GolombCoder() {
+  }
+  //int decode_int(int *decoded_num, std::string str, int M) {
   int decode_int(int *decoded_num, std::string str) {
 
     size_t i = 0;
     int found = 0; // if 0 '0' was nhot found
     int q = 0; // quotient
-    for (i = 0; i < str.size(); i++) {
+    std::string str_k;
+
+    for (i; i < str.size(); i++){
+      if (str[i] == '0') {
+        break;
+      }
+      else{
+        str_k = str_k + str[i];
+      }
+    }
+
+    //for (i = 0; i < str.size(); i++) {
+    for (i; i < str.size(); i++) {
       if (str[i] == '0') {
         // break counting loop
         found = 1;
@@ -61,8 +76,6 @@ public:
       std::cerr << "No Unary code was found" << std::endl;
       return -1;
     }
-
-
     double k1 = log2(M);
     int k = ceil(k1);
     int c = pow(2, k) - M;
@@ -111,7 +124,6 @@ public:
       num = (abs(num) * 2) + 1;
     }
 
-
     int quotient = num / M;
     int remainder = num % M;
     std::vector<char> quotient_enc;
@@ -126,8 +138,6 @@ public:
 
     // start remainder code
     std::vector<char> bits_remainder;
-    double k1 = log2(M);
-    int k = ceil(k1);
     int c = pow(2, k) - M;
 
     if (remainder >= 0 and remainder < c) {
@@ -152,8 +162,9 @@ public:
       std::cout << c;
       i++;
     }
-    std::cout  << std::endl;
-    return; // str_enc
+
+    //return M;
+    return;// str_enc
   }
 
 };

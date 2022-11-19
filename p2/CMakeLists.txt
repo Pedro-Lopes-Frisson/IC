@@ -1,3 +1,5 @@
+
+
 cmake_minimum_required(VERSION 3.16)
 project( Projeto2 )
 find_package( OpenCV REQUIRED )
@@ -29,3 +31,9 @@ target_link_libraries( exercicio2 ${OpenCV_LIBS} )
 
 add_executable (Encoder Encoder.cpp)
 target_link_libraries (Encoder sndfile)
+
+add_executable (Encoder Encoder.cpp)
+target_link_libraries (Encoder sndfile)
+
+add_executable (Decoder Decoder.cpp)
+target_link_libraries (Decoder sndfile)
