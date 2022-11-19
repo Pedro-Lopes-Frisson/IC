@@ -26,3 +26,6 @@ target_link_libraries( exercicio2 ${OpenCV_LIBS} )
 
 #add_executable( GolombCoding GolombCoding.cpp )
 #target_link_libraries( GolombCoding  )
+
+add_executable (Encoder Encoder.cpp)
+target_link_libraries (Encoder sndfile)
