@@ -7,9 +7,9 @@ using namespace std;
 
 int main() {
   //GolombCoder n = GolombCoder(10);
-  GolombCoder n = GolombCoder();
+  GolombCoder n = GolombCoder((int) pow(2, 16));
   string bits;
-  int og_nums[11] = {0,12,23,34,45,56,67,89, -19, -22, -44};
+  int og_nums[11] = {21,15,-1,2,1,-5,-7,5, 0, -1, 3};
   int num_dec[11];
   for(size_t i = 0; i < 11; i++){
     cout << "Num " << og_nums[i];

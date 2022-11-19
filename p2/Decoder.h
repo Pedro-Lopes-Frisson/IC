@@ -13,7 +13,7 @@
 
 class Decoder {
 private:
-	GolombCoder coder{};
+	GolombCoder coder{(int) pow(2, 16)};
 
 	void decode_residual(int *value, std::string &bits) {
 	  	int sucss;
@@ -36,64 +36,52 @@ public:
 		// Abrir o ficheiro codificado
 		BitStream bitStream = BitStream{inFile};
 		// Vetor para armazenar os residuos
-		std::vector<int> residuos;
+		std::vector<int> samples;
 		// Ler cada um dos bits
 		auto bit = bitStream.read_bit();
-		// Percorrer todos os bits do ficheiro
-		std::string k_bits;
-		// Bandeira que simboliza que o qr_bits ainda nao esta cheio
-		int flag = 0;
-		// Quociente do M ideal é sempre 0, entao é o bit logo asseguir ao k
-		// String para o  q + r
+		// bits do q
+		std::string q_bits;
+		// bits do r
+		std::string r_bits;
+		//  Flag do q
+		int flag_q = 1;
+		// String do qr final
 		std::string qr_bits;
-		// Inicializar o k
-		int k;
+		// Valor do residual
+		int sample;
+		int atual_residual;
+		// Valor do last residual
+		int last_residual = 0;
 
-		while (bit != '-'){
-			std::cout << bit << std::endl;
-			// ENCONTRAR O K
-			if (bit != '0' && flag == 0){
-				k_bits = k_bits + std::to_string(bit);
-			}
-			// Já lemos o K
-			else{
-				if (flag == 0){
-					// Metemos o k a inteiro e damos reset à k_bits
-					k = stoi(k_bits);
-					std::string k_bits;
-					// Calculamos o M
-					//int M = pow(2, k);
-					// Adicionamos o bit do quociente
-					qr_bits = qr_bits + std::to_string(bit);
-					flag = 1;
-				}
-				else { 
-					qr_bits = qr_bits + std::to_string(bit);
-					// Já temos o r todo
-					if(qr_bits.size() == k){
-						// Damos reset à flag
-						flag = 0;
-						// Criar o inteiro que nos vai dar o residual descodificado
-						int residual;
-						int sucss = coder.decode_int( &residual, qr_bits);
-						// Reset ao array
-						std::string qr_bits;
-						//Reset ao k
-						int k;
-						// Escrever no vetor dos residuos
-						residuos.push_back(residual);
-						std::cout << residuos.data() << std::endl;
-					}
-				}
+		// Criar o ficheiro para escrever o ficheiro de áudio
+		SndfileHandle sfhOut{ outFile, SFM_WRITE, 65536, 2, 441000};
+
+
+		while(bit != '-'){
+
+			qr_bits = qr_bits  + std::to_string(bit);
+			std::cout << bit;
+
+			if(qr_bits.size() == 17){
+
+				int sucss = coder.decode_int(&atual_residual, qr_bits);
+				std::cout << qr_bits << std::endl;
+
+				sample = atual_residual + last_residual;
+
+				std::cout << atual_residual << std::endl;
+				std::cout << sample << std::endl;
+
+				last_residual = atual_residual;
+				samples.push_back(sample);
+				qr_bits.clear();
 			}
 
+			// Ler o próximo bit
+			bit = bitStream.read_bit();
 		}
-		// Escrever no ficheiro .wav
-		//SndfileHandle sfhOut{outFile};
-		//sfhOut.writef(residuos.data());
+	// Escrever no ficheiro .wav
+	sfhOut.writef(samples.data(), 65536);
 	}
-
-
 };
-
 #endif //P2_DECODER_H

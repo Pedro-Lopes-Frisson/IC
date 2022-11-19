@@ -13,7 +13,7 @@
 
 class Encoder {
 private:
-	GolombCoder coder{};
+	GolombCoder coder{(int) pow(2, 16)};
 	  const static long FRAMES_BUFFER_SIZE = 65536;
 	  
 	  int open_wav(SndfileHandle &inFile, std::string filename) {
@@ -37,10 +37,7 @@ private:
   
 	  //int encode_residual(short value, std::string &bits) {
 	  void encode_residual(short value, std::string &bits) {
-	  	//int M;
-	    //M = coder.encode_int(value, bits);
 	    coder.encode_int(value, bits);
-	    //return M;
 	  };
 	  
 	  void write_to_file(std::string bits,  BitStream &bitStream) {
@@ -74,11 +71,16 @@ public:
 	    while ((nFrames = sndFile.readf(samples.data(), FRAMES_BUFFER_SIZE))) { // 10 2
 	      samples.resize(nFrames * sndFile.channels());
 	      for (auto c : samples) {
+
 	        residual = c - lastValue;
 	        lastValue = c;
-	        //f2 << residual;
 	        encode_residual(residual, bits);
-	        //f1 << bits;
+
+	       	std::cout << c << std::endl;
+	        std::cout << residual << std::endl;
+	        std::cout << bits << std::endl;
+	        std::cout << std::endl;
+
 	        write_to_file(bits, bitStream);
 	      }
 	      
