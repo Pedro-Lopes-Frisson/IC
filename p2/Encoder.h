@@ -15,6 +15,7 @@ class Encoder {
 private:
   GolombCoder coder{(int) pow(2, 16)};
   const static long FRAMES_BUFFER_SIZE = 65536;
+  std::vector<short> lastvalues;
   
   int open_wav(SndfileHandle &inFile, std::string filename) {
     inFile = SndfileHandle(filename);
@@ -45,9 +46,24 @@ private:
       bitStream.writeBit(bits[i] == '1');
     }
   }
+  
+  int predict() {
+    return lastvalues[0] - 3 * lastvalues[1] + 3 * lastvalues[2];
+  }
+  
+  void add_new_sample(short xn_1) {
+    lastvalues.erase(lastvalues.begin()); // remove the oldest predictor
+    lastvalues.push_back(xn_1);
+  }
+  // arr.pop(0)
+  //arr.pushback new val
+
 
 public:
   Encoder() {
+    lastvalues.resize(3);
+    std::fill(lastvalues.begin(), lastvalues.end(), 0);
+    std::cout << "Pred: "  << predict() << std::endl;
   }
   
   void encode_audio_file(std::string inFile, std::string outFile) {
@@ -62,7 +78,7 @@ public:
     size_t nFrames;
     std::vector<short> samples(FRAMES_BUFFER_SIZE * sndFile.channels());
     short residual;
-    short lastValue = 0;
+    //short lastValue = 0;
     std::string bits;
     //std::ofstream f1 {"Encoded_residuos", std::ofstream::app};
     //std::ofstream f2 {"residuos", std::ofstream::app};
@@ -72,14 +88,14 @@ public:
     while ((nFrames = sndFile.readf(samples.data(), FRAMES_BUFFER_SIZE))) { // 10 2
       samples.resize(nFrames * sndFile.channels());
       for (auto c: samples) {
-        
-        residual = c - lastValue;
-        lastValue = c;
+  
+        std::cout << "S: " << residual << std::endl;
+        residual = c - predict();
+        add_new_sample(c);
         encode_residual(residual, bits);
         
         write_to_file(bits, bitStream);
         i++;
-        std::cout << c << std::endl;
       }
       
     }

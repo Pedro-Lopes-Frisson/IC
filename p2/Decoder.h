@@ -14,6 +14,7 @@
 class Decoder {
 private:
   GolombCoder coder{(int) pow(2, 16)};
+  std::vector<short> lastvalues;
   
   void decode_residual(int *value, std::string &bits) {
     int sucss;
@@ -23,11 +24,22 @@ private:
       std::cerr << "Sample decoding could not be performed!" << std::endl;
     }
   };
+  
+  int predict() {
+    return lastvalues[0] - 3 * lastvalues[1] + 3 * lastvalues[2];
+  }
+  
+  void add_new_sample(short xn_1) {
+    lastvalues.erase(lastvalues.begin()); // remove the oldest predictor
+    lastvalues.push_back(xn_1);
+  }
 
 
 public:
   Decoder() {
-  
+    lastvalues.resize(3);
+    std::fill(lastvalues.begin(), lastvalues.end(), 0);
+    std::cout << "Pred: "  << predict() << std::endl;
   }
   
   // inFile é o ficheiro codificado - outFile é o ficheiro descodificado
@@ -143,12 +155,12 @@ public:
       
       int pred;
       coder.decode_int(&pred, q_r);
-      sample = pred + last_sample;
+      sample = pred + predict();
       
       //std::cout << "Sample Real, " << count++ << ": " << sample << "\n";
       //std::cout << "Encode : " << pred << "\n";
       //std::cout << q_r<< std::endl;
-      last_sample = sample;
+      add_new_sample(sample);
       samples.push_back(sample);
       
       bit = bitStream.getBit();
@@ -160,10 +172,7 @@ public:
     // Escrever no ficheiro .wav
     sfhOut.writef(samples.data(), 1294041);
     bitStream.close();
-  
-    for (auto c : samples){
-      std::cout << c << std::endl;
-    }
+    
   }
 };
 
