@@ -43,6 +43,10 @@ public:
     this->M = M;
   }
   
+  void setM(int M) {
+    this->M = M;
+  }
+  
   int decode_int(int *decoded_num, std::string str) {
     long long int num;
     size_t i = 0;
@@ -100,7 +104,7 @@ public:
       //num was negative
       num = -(num - 1) / 2;
     }
-    *decoded_num = (int)num;
+    *decoded_num = (int) num;
     
     return 0;
   }
@@ -111,7 +115,9 @@ public:
     } else {
       num = (abs(num) * 2) + 1;
     }
-    
+    // 1 0
+    // q
+    // remainder
     
     int quotient = num / M;
     int remainder = num % M;

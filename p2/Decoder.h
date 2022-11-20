@@ -13,7 +13,7 @@
 
 class Decoder {
 private:
-  GolombCoder coder{(int) pow(2, 16)};
+  GolombCoder coder{10000};
   std::vector<short> lastvalues;
   
   void decode_residual(int *value, std::string &bits) {
@@ -39,7 +39,7 @@ public:
   Decoder() {
     lastvalues.resize(3);
     std::fill(lastvalues.begin(), lastvalues.end(), 0);
-    std::cout << "Pred: "  << predict() << std::endl;
+    std::cout << "Pred: " << predict() << std::endl;
   }
   
   // inFile é o ficheiro codificado - outFile é o ficheiro descodificado
@@ -100,6 +100,10 @@ public:
       bit = bitStream.getBit();
     }
      */
+    long long int frames;
+    long long int samplerate;
+    int channels;
+    
     
     const char one_num = '1';
     const char zero_num = '0';
@@ -107,6 +111,7 @@ public:
     std::string q_r;
     int last_sample = 0;
     long long int count = 0;
+    int cc = 0;
     while (bit != EOF) {
       // read q
       while (q_flag == 0) { // break only if unary code is finished
@@ -124,13 +129,13 @@ public:
       // read remainder
       // read 2 bits if both are not 1's read 14 more
       int bits_2[2];
-      int read_bits = 14;
+      int read_bits = log2(10000);
       bitStream.getNBit(bits_2, 2);
       std::string r_str;
       
       if (bits_2[0] == bits_2[1] == 1) {
         // read 2 bits if they are both 1's read 15 more
-        read_bits = 14;
+        read_bits = ceil(log2(10000));
       }
       std::vector<int> remainder_bits;
       remainder_bits.resize(read_bits);
@@ -152,6 +157,21 @@ public:
           }
         }
       }
+      if(cc == 0){
+        coder.decode_int(&frames, q_r);
+        cc++;
+        continue;
+      }
+      if(cc == 1){
+        coder.decode_int(&samplerate, q_r);
+        cc++;
+        continue;
+      }
+      if(cc == 2){
+        coder.decode_int(&channels, q_r);
+        cc++;
+        continue;
+      }
       
       int pred;
       coder.decode_int(&pred, q_r);
@@ -159,10 +179,10 @@ public:
       
       //std::cout << "Sample Real, " << count++ << ": " << sample << "\n";
       //std::cout << "Encode : " << pred << "\n";
-      //std::cout << q_r<< std::endl;
       add_new_sample(sample);
       samples.push_back(sample);
       
+      std::cout << q_r << "|" << std::endl;
       bit = bitStream.getBit();
       q_r.clear();
       q_flag = 0;
