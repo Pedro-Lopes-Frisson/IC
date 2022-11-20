@@ -18,14 +18,22 @@ SET (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BASE_DIR}/build/p2)
 add_executable( exercicio1 exercicio1.cpp )
 target_link_libraries( exercicio1 ${OpenCV_LIBS} )
 
+add_library( BitStream BitStream.cpp BitStream.h )
+
+add_executable( bitStream bitStream.cpp )
+target_link_libraries( bitStream BitStream )
+
 add_executable( exercicio2 exercicio2.cpp )
 target_link_libraries( exercicio2 ${OpenCV_LIBS} )
 
-add_executable( GolombCoding GolombCoding.cpp)
-target_link_libraries( GolombCoding  )
+#add_executable( GolombCoding GolombCoding.cpp )
+#target_link_libraries( GolombCoding  )
 
 add_executable (Encoder Encoder.cpp)
-target_link_libraries (Encoder sndfile)
+target_link_libraries (Encoder sndfile BitStream)
 
 add_executable (Decoder Decoder.cpp)
-target_link_libraries (Decoder sndfile)
+target_link_libraries (Decoder sndfile BitStream)
+
+add_executable (GolombCoding GolombCoding.cpp)
+target_link_libraries (GolombCoding)

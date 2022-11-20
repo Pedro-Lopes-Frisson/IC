@@ -44,7 +44,7 @@ public:
   }
   
   int decode_int(int *decoded_num, std::string str) {
-    
+    long long int num;
     size_t i = 0;
     int found = 0; // if 0 '0' was nhot found
     int q = 0; // quotient
@@ -80,7 +80,7 @@ public:
     
     
     if (rem_bin < c) {
-      *decoded_num = M * q + rem_bin;
+      num = M * q + rem_bin;
     } else {
       rem = str.substr(i + 1, k);
       rem_bin = 0;
@@ -89,16 +89,18 @@ public:
           rem_bin += pow(2, (rem.size() - l - 1));
         }
       }
-      *decoded_num = M * q + rem_bin - c;
+      num = M * q;
+      num += rem_bin;
+      num -= c;
     }
-    if (*decoded_num % 2 == 0) {
+    if (num % 2 == 0) {
       //number was positive
-      *decoded_num = *decoded_num / 2;
+      num = num / 2;
     } else {
       //num was negative
-      *decoded_num = -(*decoded_num - 1) / 2;
+      num = -(num - 1) / 2;
     }
-    
+    *decoded_num = (int)num;
     
     return 0;
   }
@@ -106,8 +108,7 @@ public:
   void encode_int(int num, std::string &str) {
     if (num >= 0) {
       num = 2 * num;
-    }
-    else {
+    } else {
       num = (abs(num) * 2) + 1;
     }
     
@@ -128,8 +129,10 @@ public:
     std::vector<char> bits_remainder;
     double k1 = log2(M);
     int k = ceil(k1);
+    
     int c = pow(2, k) - M;
     
+    // c = 0
     if (remainder >= 0 and remainder < c) {
       bits_remainder.resize(k - 1);
       getBits(remainder, bits_remainder);
