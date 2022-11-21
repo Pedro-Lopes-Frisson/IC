@@ -29,11 +29,14 @@ target_link_libraries( exercicio2 ${OpenCV_LIBS} )
 #add_executable( GolombCoding GolombCoding.cpp )
 #target_link_libraries( GolombCoding  )
 
-add_executable (Encoder Encoder.cpp)
-target_link_libraries (Encoder sndfile BitStream)
+#add_executable (Encoder Encoder.cpp)
+#target_link_libraries (Encoder sndfile BitStream)
 
-add_executable (Decoder Decoder.cpp)
-target_link_libraries (Decoder sndfile BitStream)
+#add_executable (Decoder Decoder.cpp)
+#target_link_libraries (Decoder sndfile BitStream)
 
 add_executable (GolombCoding GolombCoding.cpp)
 target_link_libraries (GolombCoding)
+
+add_executable (a teste.cpp)
+target_link_libraries (a)

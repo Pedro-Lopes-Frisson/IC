@@ -15,14 +15,29 @@ class Decoder {
 private:
   GolombCoder coder{10000};
   std::vector<short> lastvalues;
+  std::vector<short> block;
+  int blocksize;
   
-  void decode_residual(int *value, std::string &bits) {
-    int sucss;
-    sucss = coder.decode_int(value, bits);
+  
+  int open_wav(SndfileHandle &inFile, std::string filename) {
+    inFile = SndfileHandle(filename.data(), SFM_WRITE, 65538, 2, 44100);
     
-    if (sucss != 0) {
-      std::cerr << "Sample decoding could not be performed!" << std::endl;
+    if (inFile.error()) {
+      std::cerr << "Error: invalid input file\n";
+      return 1;
     }
+    
+    if ((inFile.format() & SF_FORMAT_TYPEMASK) != SF_FORMAT_WAV) {
+      std::cerr << "Error: file is not in WAV format\n";
+      return 1;
+    }
+    
+    if ((inFile.format() & SF_FORMAT_SUBMASK) != SF_FORMAT_PCM_16) {
+      std::cerr << "Error: file is not in PCM_16 format\n";
+      return 1;
+    }
+    
+    return 0;
   };
   
   int predict() {
@@ -36,14 +51,18 @@ private:
 
 
 public:
-  Decoder() {
+  Decoder(int m, int b) {
+    coder.setM(m);
+    blocksize = b;
+    block.resize(blocksize);
+    
     lastvalues.resize(3);
     std::fill(lastvalues.begin(), lastvalues.end(), 0);
-    std::cout << "Pred: " << predict() << std::endl;
   }
   
   // inFile é o ficheiro codificado - outFile é o ficheiro descodificado
   void decode_Encoded_audio_file(std::string inFile, std::string outFile) {
+    SndfileHandle sfhOut;
     
     // Abrir o ficheiro codificado
     BitStream bitStream = BitStream(inFile.data(), BT_READ);
@@ -51,73 +70,39 @@ public:
     std::vector<short> samples;
     // Ler cada um dos bits
     auto bit = bitStream.getBit();
-    // bits do q
-    std::string q_bits;
-    // bits do r
-    std::string r_bits;
-    //  Flag do q
-    int flag_q = 1;
-    // String do qr final
-    std::string qr_bits;
-    // Valor do residual
-    int sample;
-    int atual_residual;
-    // Valor do last residual
-    int last_residual = 0;
     
     // Criar o ficheiro para escrever o ficheiro de áudio
-    SndfileHandle sfhOut{outFile, SFM_WRITE, 65538, 2, 44100};
-    
-    
-    long long int i = 0;
-    /*
-    while (bit != EOF) {
-      
-      qr_bits = qr_bits + std::to_string(bit);
-      //std::cout << bit;
-      
-      if (qr_bits.size() == 17) {
-        
-        int sucss = coder.decode_int(&atual_residual, qr_bits);
-        
-        sample = atual_residual + last_residual;
-        xm-1 a sample real anterior
-        
-        y = xm - xm-1
-        - xm = - y - xm-1
-        xm = y + xm-1
-        //std::cout << atual_residual << std::endl;
-        std::cout << "Sample" << i << ": " << sample << std::endl;
-        std::cout << "Last Sample: " << last_residual << std::endl;
-        std::cout << "Bits: " << qr_bits << std::endl;
-        last_residual = sample;
-        samples.push_back(sample);
-        qr_bits.clear();
-        i++;
-      }
-      
-      // Ler o próximo bit
-      bit = bitStream.getBit();
+    int res = open_wav(sfhOut, outFile);
+    if (res != 0) {
+      std::cerr << "File could not be open" << std::endl;
     }
-     */
+    /*
     long long int frames;
     long long int samplerate;
     int channels;
+     */
     
     
     const char one_num = '1';
     const char zero_num = '0';
-    bool q_flag = 0;
     std::string q_r;
-    int last_sample = 0;
-    long long int count = 0;
-    int cc = 0;
+    long long int count = 2;
+    long long int mid, side;
+    short left_sample, right_sample;
+    int s = 0;
+    //samples.resize(2);
+    int eof_flag = 0;
+    
+    
     while (bit != EOF) {
       // read q
-      while (q_flag == 0) { // break only if unary code is finished
+      while (true) { // break only if unary code is finished
+        if (bit == EOF) {
+          eof_flag = 1;
+          break;
+        }
         if (bit == 0) {
           // unary code has finished
-          q_flag = 1;
           q_r += zero_num;
           break;
         } else if (bit == 1) {
@@ -125,17 +110,18 @@ public:
         }
         bit = bitStream.getBit();
       }
+      if(eof_flag){
+        break;
+      }
       
       // read remainder
       // read 2 bits if both are not 1's read 14 more
       int bits_2[2];
-      int read_bits = log2(10000);
+      int read_bits = log2(1024) - 2;
       bitStream.getNBit(bits_2, 2);
-      std::string r_str;
-      
-      if (bits_2[0] == bits_2[1] == 1) {
+      if ((bits_2[0] == bits_2[1]) == 1) {
         // read 2 bits if they are both 1's read 15 more
-        read_bits = ceil(log2(10000));
+        read_bits = ceil(log2(1024)) - 2;
       }
       std::vector<int> remainder_bits;
       remainder_bits.resize(read_bits);
@@ -157,6 +143,7 @@ public:
           }
         }
       }
+      /*
       if(cc == 0){
         coder.decode_int(&frames, q_r);
         cc++;
@@ -172,28 +159,58 @@ public:
         cc++;
         continue;
       }
+       */
       
-      int pred;
-      coder.decode_int(&pred, q_r);
-      sample = pred + predict();
+      if (count % 2 == 0) {
+        coder.decode_int(&mid, q_r);
+        mid = predict() + mid; // recover what was lost from encoding only the residual
+        //std::cout << "MID: " << mid << std::endl;
+        //std::cout << "MID Bits: " << q_r << std::endl;
+      } else if (count % 2 == 1) {
+        coder.decode_int(&side, q_r); // we assume this sample is already really low
+        // now we have everything we need to recreate the audio channels
+        //std::cout << "SIDE: " << side << std::endl;
+        //std::cout << "SIDE Bits: " << q_r << std::endl;
+        left_sample = mid + side;
+        right_sample = mid - side;
+        
+        //std::cout << count << std::endl;
+        //samples.push_back(left_sample);
+        //samples.push_back(right_sample);
+        std::cout << "S: " << s << std::endl;
+        samples.push_back(left_sample);
+        samples.push_back(right_sample);
+        
+        //s += 2;
+        std::cout << "Right: " << right_sample << std::endl;
+        std::cout << "Left: " << left_sample << std::endl;
+        add_new_sample(mid);
+        
+      }
+      
+      count++;
+      
+      //sample = pred + predict();
       
       //std::cout << "Sample Real, " << count++ << ": " << sample << "\n";
       //std::cout << "Encode : " << pred << "\n";
-      add_new_sample(sample);
-      samples.push_back(sample);
+      //add_new_sample(sample);
       
-      std::cout << q_r << "|" << std::endl;
+      //std::cout << q_r << "|" << std::endl;
       bit = bitStream.getBit();
       q_r.clear();
-      q_flag = 0;
     }
-    //std::cout << "Escrever ficheiro" << std::endl;
+    
+    //std::cout << "Escrever ficheiro" << s << std::endl;
+    //std::cout << "Escrever ficheiro" << count << std::endl;
     //std::cout << "Escrever ficheiro " << samples.size() << std::endl;
     // Escrever no ficheiro .wav
-    sfhOut.writef(samples.data(), 1294041);
     bitStream.close();
+    sfhOut.writef(samples.data(), samples.size() / 2);
+   
     
   }
+  
 };
 
 #endif //P2_DECODER_H
