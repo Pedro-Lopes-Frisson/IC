@@ -9,14 +9,19 @@
 #include <fstream>
 #include <iostream>
 #include <cmath>
+#include <map>
 
 
 class Decoder {
 private:
-  GolombCoder coder{10000};
+  std::vector<short> block_prev_mid;
+  std::vector<short> block_prev_side;
+  GolombCoder coder_mid{10};
+  GolombCoder coder_side{10};
   std::vector<short> lastvalues;
-  std::vector<short> block;
-  int blocksize;
+  std::vector<short> lastvaluesSide;
+  int block_samples_mid = 0;
+  int block_samples_side = 0;
   
   
   int open_wav(SndfileHandle &inFile, std::string filename) {
@@ -40,24 +45,136 @@ private:
     return 0;
   };
   
-  int predict() {
-    return lastvalues[0] - 3 * lastvalues[1] + 3 * lastvalues[2];
+  int predict(int mid) {
+    if (mid) {
+      return lastvalues[0] - 3 * lastvalues[1] + 3 * lastvalues[2];
+    } else {
+      return lastvaluesSide[0] - 3 * lastvaluesSide[1] + 3 * lastvaluesSide[2];
+    }
+    
   }
   
-  void add_new_sample(short xn_1) {
-    lastvalues.erase(lastvalues.begin()); // remove the oldest predictor
-    lastvalues.push_back(xn_1);
+  //int encode_residual(short value, std::string &bits) {
+  void decode_residiual(long long int *value, std::string &bits, int mid) {
+    if (mid)
+      coder_mid.decode_int(value, bits);
+    else
+      coder_side.decode_int(value, bits);
+  };
+  
+  void add_new_sample_block_mid(short xn_1) {
+    // increment first that way we check if
+    // blocksize values have been written and update M accordingly
+    increment_block_samples_counter(1);
+    block_prev_mid.erase(block_prev_mid.begin()); // remove the oldest predictor
+    block_prev_mid.push_back(xn_1);
+  }
+  
+  void add_new_sample_block_side(short xn_1) {
+    // increment first that way we check if
+    // blocksize values have been written and update M accordingly
+    increment_block_samples_counter(0);
+    block_prev_side.erase(block_prev_side.begin()); // remove the oldest predictor
+    block_prev_side.push_back(xn_1);
+  }
+  
+  void increment_block_samples_counter(int mid) {
+    if (mid) {
+      if (block_samples_mid == block_prev_mid.size() - 1) {
+        // block samples was filled
+        // update M
+        calculate_new_m(mid);
+        
+      }
+      block_samples_mid = (block_samples_mid + 1) % block_prev_mid.size(); // 0 a 1023
+      return;
+    }
+    
+    if (block_samples_side == block_prev_side.size() - 1) {
+      // block samples was filled
+      // update M
+      calculate_new_m(mid);
+      
+    }
+    block_samples_side = (block_samples_side + 1) % block_prev_side.size(); // 0 a 1023
+  }
+  
+  
+  void add_new_sample(short xn_1, int mid) {
+    if (mid) {
+      lastvalues.erase(lastvalues.begin()); // remove the oldest predictor
+      lastvalues.push_back(xn_1);
+    } else {
+      lastvaluesSide.erase(lastvaluesSide.begin()); // remove the oldest predictor
+      lastvaluesSide.push_back(xn_1);
+    }
+  }
+  
+  
+  void calculate_new_m(int mid) {
+    if (mid) {
+      double sample_mean = 0;
+      for (auto c: block_prev_mid) {
+        if (c < 0)
+          sample_mean += 2 * abs(c) + 1;
+        else
+          sample_mean += 2 * c;
+      }
+      sample_mean /= block_prev_mid.size();
+      
+      
+      std::cout << std::endl << "Mid, Sample mean: " << coder_mid.M;
+      // calculate M
+      double m = 0;
+      
+      // round M to the nearest power of 2
+      std::cout << std::endl << "Mid, Previous M: " << coder_mid.M;
+      if (sample_mean > 0)
+        m = ceil(log2(sample_mean / 2));
+      
+      coder_mid.M = pow(2, m);
+      std::cout << std::endl << "MID, Next M: " << coder_mid.M;
+    } else {
+      double sample_mean = 0;
+      for (auto c: block_prev_side) {
+        if (c < 0)
+          sample_mean += 2 * abs(c) + 1;
+        else
+          sample_mean += 2 * c;
+      }
+      sample_mean /= block_prev_side.size();
+      
+      
+      std::cout << std::endl << "Mid, Sample mean: " << coder_side.M;
+      // calculate M
+      double m = 0;
+      
+      // round M to the nearest power of 2
+      std::cout << std::endl << "Mid, Previous M: " << coder_side.M;
+      if (sample_mean > 0)
+        m = ceil(log2(sample_mean / 2));
+      
+      coder_side.M = pow(2, m);
+      std::cout << std::endl << "MID, Next M: " << coder_side.M;
+    }
   }
 
 
 public:
-  Decoder(int m, int b) {
-    coder.setM(m);
-    blocksize = b;
-    block.resize(blocksize);
+  Decoder(int k, int b) {
+    coder_side.M = pow(2, k);
+    coder_mid.M = pow(2, k);
+    block_samples_mid = 0;
+    block_samples_side = 0;
+    block_prev_side.resize(b);
+    block_prev_mid.resize(b);
     
     lastvalues.resize(3);
+    lastvaluesSide.resize(3);
+    std::fill(lastvaluesSide.begin(), lastvaluesSide.end(), 0);
     std::fill(lastvalues.begin(), lastvalues.end(), 0);
+    std::fill(block_prev_side.begin(), block_prev_side.end(), 0);
+    std::fill(block_prev_mid.begin(), block_prev_mid.end(), 0);
   }
   
   // inFile é o ficheiro codificado - outFile é o ficheiro descodificado
@@ -86,13 +203,17 @@ public:
     const char one_num = '1';
     const char zero_num = '0';
     std::string q_r;
-    long long int count = 2;
-    long long int mid, side;
+    long long int count = 0;
+    long long int mid, side, residual, residual_side;
     short left_sample, right_sample;
     int s = 0;
     //samples.resize(2);
     int eof_flag = 0;
+    std::ofstream f1{"res_bits_1", std::ofstream::app};
+    std::ofstream f2{"side_bits_1", std::ofstream::app};
+    std::vector<int> remainder_bits;
     
+    short temp_mid;
     
     while (bit != EOF) {
       // read q
@@ -110,81 +231,72 @@ public:
         }
         bit = bitStream.getBit();
       }
-      if(eof_flag){
+      if (eof_flag) {
         break;
       }
       
       // read remainder
       // read 2 bits if both are not 1's read 14 more
-      int bits_2[2];
-      int read_bits = log2(1024) - 2;
-      bitStream.getNBit(bits_2, 2);
-      if ((bits_2[0] == bits_2[1]) == 1) {
-        // read 2 bits if they are both 1's read 15 more
-        read_bits = ceil(log2(1024)) - 2;
+      // TODO: Locked bits is 2 change that
+      int read_bits;
+      if (count % 2 == 0) {
+        read_bits = log2(coder_mid.M);
+      } else {
+        read_bits = log2(coder_side.M);
       }
-      std::vector<int> remainder_bits;
+      
       remainder_bits.resize(read_bits);
       
       bitStream.getNBit(remainder_bits.data(), read_bits);
       // create binary string
-      for (int j = 0; j < read_bits + 2; j++) {
-        if (j < 2) {
-          if (bits_2[j] == 1) {
-            q_r += one_num;
-          } else {
-            q_r += zero_num;
-          }
+      for (int j = 0; j < read_bits ; j++) {
+        if (remainder_bits[j] == 1) {
+          q_r += one_num;
         } else {
-          if (remainder_bits[j - 2] == 1) {
-            q_r += one_num;
-          } else {
-            q_r += zero_num;
-          }
+          q_r += zero_num;
         }
       }
-      /*
-      if(cc == 0){
-        coder.decode_int(&frames, q_r);
-        cc++;
-        continue;
-      }
-      if(cc == 1){
-        coder.decode_int(&samplerate, q_r);
-        cc++;
-        continue;
-      }
-      if(cc == 2){
-        coder.decode_int(&channels, q_r);
-        cc++;
-        continue;
-      }
-       */
+      // TODO: Decode samplerate and number of channels
       
       if (count % 2 == 0) {
-        coder.decode_int(&mid, q_r);
-        mid = predict() + mid; // recover what was lost from encoding only the residual
-        //std::cout << "MID: " << mid << std::endl;
-        //std::cout << "MID Bits: " << q_r << std::endl;
+        f1 << q_r << std::endl;
+        decode_residiual(&residual, q_r, 1);
+        mid = predict(1) + residual; // recover what was lost from encoding only the residual
+        std::cout << "MID: " << mid << std::endl;
+        std::cout << "MID Bits: " << q_r << std::endl;
+        temp_mid = mid;
       } else if (count % 2 == 1) {
-        coder.decode_int(&side, q_r); // we assume this sample is already really low
+        decode_residiual(&residual_side, q_r, 0);
+        f2 << q_r << std::endl;
+        side = predict(0) + residual_side;
         // now we have everything we need to recreate the audio channels
-        //std::cout << "SIDE: " << side << std::endl;
-        //std::cout << "SIDE Bits: " << q_r << std::endl;
+        std::cout << "SIDE: " << side << std::endl;
+        std::cout << "SIDE Bits: " << q_r << std::endl;
+        // if mid was odd it means it was changed
+        if (mid % 2 == 1) {
+          mid = ((mid - 1) / 2);
+        }
+        
         left_sample = mid + side;
         right_sample = mid - side;
         
         //std::cout << count << std::endl;
         //samples.push_back(left_sample);
         //samples.push_back(right_sample);
-        std::cout << "S: " << s << std::endl;
+        //std::cout << "S: " << s << std::endl;
         samples.push_back(left_sample);
         samples.push_back(right_sample);
         
         //s += 2;
-        std::cout << "Right: " << right_sample << std::endl;
-        std::cout << "Left: " << left_sample << std::endl;
-        add_new_sample(mid);
+        //std::cout << "Right: " << right_sample << std::endl;
+        //std::cout << "Left: " << left_sample << std::endl;
+        
+        // add value read from file
+        add_new_sample_block_mid(residual);
+        add_new_sample_block_side(residual_side);
+        // add recovered value predict + value read from file
+        add_new_sample(temp_mid, 1);
+        add_new_sample(side, 0);
         
       }
       
@@ -207,7 +319,7 @@ public:
     // Escrever no ficheiro .wav
     bitStream.close();
     sfhOut.writef(samples.data(), samples.size() / 2);
-   
+    
     
   }
   

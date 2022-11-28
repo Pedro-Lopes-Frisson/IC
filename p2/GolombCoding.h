@@ -13,10 +13,8 @@
 #include <stdlib.h>
 
 class GolombCoder {
-private:
-  int M;
   
-  void getBits(int n, std::vector<char> &bits) {
+  void getBits(long long int n, std::vector<char> &bits) {
     // counter for binary array
     int i = bits.size() - 1;
     while (n > 0 && i >= 0) {
@@ -39,15 +37,13 @@ private:
   }
 
 public:
+  int M;
   GolombCoder(int M) {
     this->M = M;
   }
   
-  void setM(int M) {
-    this->M = M;
-  }
   
-  int decode_int(int *decoded_num, std::string str) {
+  int decode_int(long long int *decoded_num, std::string str) {
     long long int num;
     size_t i = 0;
     int found = 0; // if 0 '0' was nhot found
@@ -76,7 +72,7 @@ public:
     
     
     long rem_bin = 0;
-    for (int l = 0; l < rem.size(); l++) {
+    for (size_t l = 0; l < rem.size(); l++) {
       if (rem[l] == '1') {
         rem_bin += pow(2, (rem.size() - l - 1));
       }
@@ -88,7 +84,7 @@ public:
     } else {
       rem = str.substr(i + 1, k);
       rem_bin = 0;
-      for (int l = 0; l < rem.size(); l++) {
+      for (size_t l = 0; l < rem.size(); l++) {
         if (rem[l] == '1') {
           rem_bin += pow(2, (rem.size() - l - 1));
         }
@@ -104,12 +100,12 @@ public:
       //num was negative
       num = -(num - 1) / 2;
     }
-    *decoded_num = (int) num;
+    *decoded_num = num;
     
     return 0;
   }
   
-  void encode_int(int num, std::string &str) {
+  void encode_int(long long int num, std::string &str) {
     if (num >= 0) {
       num = 2 * num;
     } else {
@@ -125,7 +121,7 @@ public:
     //allocate q + 1 bits
     quotient_enc.resize(quotient + 1);
     //Write string with q 1's
-    for (int n = 0; n < quotient_enc.size() - 1; n++)
+    for (size_t n = 0; n < quotient_enc.size() - 1; n++)
       quotient_enc[n] = '1';
     // write one 0
     quotient_enc[quotient_enc.size() - 1] = '0';

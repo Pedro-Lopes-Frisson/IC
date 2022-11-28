@@ -1,5 +1,3 @@
-
-
 cmake_minimum_required(VERSION 3.16)
 project( Projeto2 )
 find_package( OpenCV REQUIRED )
@@ -34,9 +32,3 @@ target_link_libraries (Encoder sndfile BitStream)
 
 add_executable (Decoder Decoder.cpp)
 target_link_libraries (Decoder sndfile BitStream)
-
-add_executable (GolombCoding GolombCoding.cpp)
-target_link_libraries (GolombCoding)
-
-add_executable (a teste.cpp)
-target_link_libraries (a)
