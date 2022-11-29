@@ -24,8 +24,8 @@ private:
   int block_samples_side = 0;
   
   
-  int open_wav(SndfileHandle &inFile, std::string filename) {
-    inFile = SndfileHandle(filename.data(), SFM_WRITE, 65538, 2, 44100);
+  int open_wav(SndfileHandle &inFile, std::string filename, int channels, long long int srate) {
+    inFile = SndfileHandle(filename.data(), SFM_WRITE, 65538, channels, srate);
     
     if (inFile.error()) {
       std::cerr << "Error: invalid input file\n";
@@ -123,40 +123,43 @@ private:
       sample_mean /= block_prev_mid.size();
       
       
-      std::cout << std::endl << "Mid, Sample mean: " << coder_mid.M;
       // calculate M
       double m = 0;
       
       // round M to the nearest power of 2
-      std::cout << std::endl << "Mid, Previous M: " << coder_mid.M;
+      //std::cout << std::endl << "Mid, Previous M: " << coder_mid.M;
       if (sample_mean > 0)
         m = ceil(log2(sample_mean / 2));
       
       coder_mid.M = pow(2, m);
-      std::cout << std::endl << "MID, Next M: " << coder_mid.M;
-    } else {
-      double sample_mean = 0;
-      for (auto c: block_prev_side) {
-        if (c < 0)
-          sample_mean += 2 * abs(c) + 1;
-        else
-          sample_mean += 2 * c;
-      }
-      sample_mean /= block_prev_side.size();
-      
-      
-      std::cout << std::endl << "Mid, Sample mean: " << coder_side.M;
-      // calculate M
-      double m = 0;
-      
-      // round M to the nearest power of 2
-      std::cout << std::endl << "Mid, Previous M: " << coder_side.M;
-      if (sample_mean > 0)
-        m = ceil(log2(sample_mean / 2));
-      
-      coder_side.M = pow(2, m);
-      std::cout << std::endl << "MID, Next M: " << coder_side.M;
+      if (m <= 0)
+        coder_mid.M = 1;
+      //std::cout << std::endl << "MID, Next M: " << coder_mid.M;
+      return;
     }
+    double sample_mean = 0;
+    for (auto c: block_prev_side) {
+      if (c < 0)
+        sample_mean += 2 * abs(c) + 1;
+      else
+        sample_mean += 2 * c;
+    }
+    sample_mean /= block_prev_side.size();
+    
+    
+    // calculate M
+    double m = 0;
+    
+    // round M to the nearest power of 2
+    //std::cout << std::endl << "side, Previous M: " << coder_side.M;
+    if (sample_mean > 0)
+      m = ceil(log2(sample_mean / 2));
+    
+    coder_side.M = pow(2, m);
+    if (m <= 0)
+      coder_side.M = 1;
+    //std::cout << "m: " << m;
+    //std::cout << std::endl << "Side, Next M: " << coder_side.M;
   }
 
 
@@ -185,14 +188,10 @@ public:
     BitStream bitStream = BitStream(inFile.data(), BT_READ);
     // Vetor para armazenar os residuos
     std::vector<short> samples;
+    
     // Ler cada um dos bits
-    auto bit = bitStream.getBit();
     
     // Criar o ficheiro para escrever o ficheiro de áudio
-    int res = open_wav(sfhOut, outFile);
-    if (res != 0) {
-      std::cerr << "File could not be open" << std::endl;
-    }
     /*
     long long int frames;
     long long int samplerate;
@@ -212,113 +211,209 @@ public:
     std::ofstream f1{"res_bits_1", std::ofstream::app};
     std::ofstream f2{"side_bits_1", std::ofstream::app};
     std::vector<int> remainder_bits;
+    short nChannels = 0;
+    long long int sampleRate = 0;
+    int bits_sR[16];
+    bitStream.getNBit(bits_sR, 16);
+    for (int h = 0; h < 16; h++) {
+      if (bits_sR[h])
+        sampleRate += pow(2, 15 - h);
+    }
     
+    
+    int bits_nChannels[8];
+    bitStream.getNBit(bits_nChannels, 8);
+    
+    for (int h = 0; h < 8; h++) {
+      if (bits_nChannels[h])
+        nChannels += pow(2, 7 - h);
+    }
+    
+    
+    int res = open_wav(sfhOut, outFile, nChannels, sampleRate);
+    if (res != 0) {
+      std::cerr << "File could not be open" << std::endl;
+    }
+    std::cout << "nChanenls : " << nChannels;
     short temp_mid;
-    
-    while (bit != EOF) {
-      // read q
-      while (true) { // break only if unary code is finished
-        if (bit == EOF) {
-          eof_flag = 1;
+    //Decode samplerate and nChannels
+    if (nChannels == 2) {
+      
+      auto bit = bitStream.getBit();
+      while (bit != EOF) {
+        // read q
+        while (true) { // break only if unary code is finished
+          if (bit == EOF) {
+            eof_flag = 1;
+            break;
+          }
+          if (bit == 0) {
+            // unary code has finished
+            q_r += zero_num;
+            break;
+          } else if (bit == 1) {
+            q_r += one_num;
+          }
+          bit = bitStream.getBit();
+        }
+        if (eof_flag) {
           break;
-        }
-        if (bit == 0) {
-          // unary code has finished
-          q_r += zero_num;
-          break;
-        } else if (bit == 1) {
-          q_r += one_num;
-        }
-        bit = bitStream.getBit();
-      }
-      if (eof_flag) {
-        break;
-      }
-      
-      // read remainder
-      // read 2 bits if both are not 1's read 14 more
-      // TODO: Locked bits is 2 change that
-      int read_bits;
-      if (count % 2 == 0) {
-        read_bits = log2(coder_mid.M);
-      } else {
-        read_bits = log2(coder_side.M);
-      }
-      
-      remainder_bits.resize(read_bits);
-      
-      bitStream.getNBit(remainder_bits.data(), read_bits);
-      // create binary string
-      for (int j = 0; j < read_bits ; j++) {
-        if (remainder_bits[j] == 1) {
-          q_r += one_num;
-        } else {
-          q_r += zero_num;
-        }
-      }
-      // TODO: Decode samplerate and number of channels
-      
-      if (count % 2 == 0) {
-        f1 << q_r << std::endl;
-        decode_residiual(&residual, q_r, 1);
-        mid = predict(1) + residual; // recover what was lost from encoding only the residual
-        std::cout << "MID: " << mid << std::endl;
-        std::cout << "MID Bits: " << q_r << std::endl;
-        temp_mid = mid;
-      } else if (count % 2 == 1) {
-        decode_residiual(&residual_side, q_r, 0);
-        f2 << q_r << std::endl;
-        side = predict(0) + residual_side;
-        // now we have everything we need to recreate the audio channels
-        std::cout << "SIDE: " << side << std::endl;
-        std::cout << "SIDE Bits: " << q_r << std::endl;
-        // if mid was odd it means it was changed
-        if (mid % 2 == 1) {
-          mid = ((mid - 1) / 2);
         }
         
-        left_sample = mid + side;
-        right_sample = mid - side;
+        // read remainder
+        int read_bits;
+        if (count % 2 == 0) {
+          read_bits = log2(coder_mid.M);
+        } else {
+          read_bits = log2(coder_side.M);
+        }
+        
+        remainder_bits.resize(read_bits);
+        
+        bitStream.getNBit(remainder_bits.data(), read_bits);
+        // create binary string
+        for (int j = 0; j < read_bits; j++) {
+          if (remainder_bits[j] == 1) {
+            q_r += one_num;
+          } else {
+            q_r += zero_num;
+          }
+        }
+        
+        if (count % 2 == 0) {
+          f1 << q_r << std::endl;
+          decode_residiual(&residual, q_r, 1);
+          mid = predict(1) + residual; // recover what was lost from encoding only the residual
+          //std::cout << "MID: " << mid << std::endl;
+          //std::cout << "MID Bits: " << q_r << std::endl;
+          temp_mid = mid;
+        } else if (count % 2 == 1) {
+          decode_residiual(&residual_side, q_r, 0);
+          f2 << q_r << std::endl;
+          side = predict(0) + residual_side;
+          // now we have everything we need to recreate the audio channels
+          //std::cout << "SIDE: " << side << std::endl;
+          //std::cout << "SIDE Bits: " << q_r << std::endl;
+          // if mid was odd it means it was changed
+          double h_side = side / (double) 2;
+          
+          left_sample = ceil(mid + h_side);
+          right_sample = ceil(mid - h_side);
+          
+          //std::cout << count << std::endl;
+          //samples.push_back(left_sample);
+          //samples.push_back(right_sample);
+          //std::cout << "S: " << s << std::endl;
+          samples.push_back(left_sample);
+          samples.push_back(right_sample);
+          
+          //s += 2;
+          std::cout << "SIDE: " << side << std::endl;
+          std::cout << "MID: " << mid << std::endl;
+          std::cout << "Right: " << right_sample << std::endl;
+          std::cout << "Left: " << left_sample << std::endl;
+          
+          // add value read from file
+          add_new_sample_block_mid(residual);
+          add_new_sample_block_side(residual_side);
+          // add recovered value predict + value read from file
+          add_new_sample(mid, 1);
+          add_new_sample(side, 0);
+          
+        }
+        
+        count++;
+        
+        //sample = pred + predict();
+        
+        //std::cout << "Sample Real, " << count++ << ": " << sample << "\n";
+        //std::cout << "Encode : " << pred << "\n";
+        //add_new_sample(sample);
+        
+        //std::cout << q_r << "|" << std::endl;
+        bit = bitStream.getBit();
+        q_r.clear();
+      }
+    } else {
+      
+      auto bit = bitStream.getBit();
+      while (bit != EOF) {
+        // read q
+        while (true) { // break only if unary code is finished
+          if (bit == EOF) {
+            eof_flag = 1;
+            break;
+          }
+          if (bit == 0) {
+            // unary code has finished
+            q_r += zero_num;
+            break;
+          } else if (bit == 1) {
+            q_r += one_num;
+          }
+          bit = bitStream.getBit();
+        }
+        if (eof_flag) {
+          break;
+        }
+        
+        // read remainder
+        int read_bits;
+        read_bits = log2(coder_mid.M);
+        
+        remainder_bits.resize(read_bits);
+        
+        bitStream.getNBit(remainder_bits.data(), read_bits);
+        // create binary string
+        for (int j = 0; j < read_bits; j++) {
+          if (remainder_bits[j] == 1) {
+            q_r += one_num;
+          } else {
+            q_r += zero_num;
+          }
+        }
+        decode_residiual(&residual, q_r, 1);
+        f2 << q_r << std::endl;
+        mid = predict(1) + residual;
+        // now we have everything we need to recreate the audio channels
+        std::cout << "MID: " << mid << std::endl;
+        std::cout << "MID Bits: " << q_r << std::endl;
+        // if mid was odd it means it was changed
         
         //std::cout << count << std::endl;
         //samples.push_back(left_sample);
         //samples.push_back(right_sample);
         //std::cout << "S: " << s << std::endl;
-        samples.push_back(left_sample);
-        samples.push_back(right_sample);
+        samples.push_back(mid);
         
-        //s += 2;
-        //std::cout << "Right: " << right_sample << std::endl;
-        //std::cout << "Left: " << left_sample << std::endl;
         
         // add value read from file
         add_new_sample_block_mid(residual);
-        add_new_sample_block_side(residual_side);
         // add recovered value predict + value read from file
-        add_new_sample(temp_mid, 1);
-        add_new_sample(side, 0);
+        add_new_sample(mid, 1);
         
+        
+        count++;
+        
+        //sample = pred + predict();
+        
+        //std::cout << "Sample Real, " << count++ << ": " << sample << "\n";
+        //std::cout << "Encode : " << pred << "\n";
+        //add_new_sample(sample);
+        
+        //std::cout << q_r << "|" << std::endl;
+        bit = bitStream.getBit();
+        q_r.clear();
       }
-      
-      count++;
-      
-      //sample = pred + predict();
-      
-      //std::cout << "Sample Real, " << count++ << ": " << sample << "\n";
-      //std::cout << "Encode : " << pred << "\n";
-      //add_new_sample(sample);
-      
-      //std::cout << q_r << "|" << std::endl;
-      bit = bitStream.getBit();
-      q_r.clear();
     }
+    
     
     //std::cout << "Escrever ficheiro" << s << std::endl;
     //std::cout << "Escrever ficheiro" << count << std::endl;
     //std::cout << "Escrever ficheiro " << samples.size() << std::endl;
     // Escrever no ficheiro .wav
     bitStream.close();
-    sfhOut.writef(samples.data(), samples.size() / 2);
+    sfhOut.writef(samples.data(), samples.size() / sfhOut.channels());
     
     
   }

@@ -10,6 +10,7 @@
 #include <fstream>
 #include <iostream>
 #include <cmath>
+#include <bitset>
 
 
 class Encoder {
@@ -22,8 +23,8 @@ private:
   std::vector<short> block_prev_side;
   GolombCoder coder_mid{10};
   GolombCoder coder_side{10};
-  int block_samples_mid = 0;
-  int block_samples_side = 0;
+  size_t block_samples_mid = 0;
+  size_t block_samples_side = 0;
   
   int open_wav(SndfileHandle &inFile, std::string filename) {
     inFile = SndfileHandle(filename);
@@ -50,6 +51,7 @@ private:
       coder_mid.encode_int(value, bits);
     else
       coder_side.encode_int(value, bits);
+    
   };
   
   void write_to_file(std::string bits, BitStream &bitStream) {
@@ -131,12 +133,14 @@ private:
       double m = 0;
       
       // round M to the nearest power of 2
-      std::cout << std::endl << "Mid, Previous M: " << coder_mid.M;
+      //std::cout << std::endl << "Mid, Previous M: " << coder_mid.M;
       if (sample_mean > 0)
         m = ceil(log2(sample_mean / 2));
       
       coder_mid.M = pow(2, m);
-      std::cout << std::endl << "MID, Next M: " << coder_mid.M;
+      if (m <= 0)
+        coder_mid.M = 1;
+      //std::cout << std::endl << "MID, Next M: " << coder_mid.M;
       return;
     }
     double sample_mean = 0;
@@ -153,12 +157,15 @@ private:
     double m = 0;
     
     // round M to the nearest power of 2
-    std::cout << std::endl << "side, Previous M: " << coder_side.M;
+    //std::cout << std::endl << "side, Previous M: " << coder_side.M;
     if (sample_mean > 0)
       m = ceil(log2(sample_mean / 2));
     
     coder_side.M = pow(2, m);
-    std::cout << std::endl << "Side, Next M: " << coder_side.M;
+    if (m <= 0)
+      coder_side.M = 1;
+    //std::cout << "m: " << m;
+    //std::cout << std::endl << "Side, Next M: " << coder_side.M;
   }
 
 
@@ -197,7 +204,6 @@ public:
     std::ofstream f2{"side_bits", std::ofstream::app};
     
     // Percorrer as samples todas
-    long long int i = 0;
     /*
     encode_residual(sndFile.samplerate(), bits);
     write_to_file(bits, bitStream);
@@ -208,55 +214,91 @@ public:
     short left_sample, right_sample;
     long long int mid, side;
     long long int c = 0;
-    int l;
-    int r;
-    int l_r;
+    size_t l;
+    size_t r;
     
-    if (sndFile.channels() != 2) {
-      std::cerr << "ERRRRRRRRRO";
+    if (sndFile.channels() > 2) {
+      std::cerr << "Too many Channels";
       std::exit(-1);
     }
-    // TODO: Write Sample Rate and Number of channels
     
-    while ((nFrames = sndFile.readf(samples.data(), FRAMES_BUFFER_SIZE))) { // 10 2
-      samples.resize(nFrames * sndFile.channels());
-      for (l = 0, r = 1; l < samples.size() - 1 && r < samples.size(); r += 2, l += 2) {
-        c++;
-        left_sample = samples[l];
-        right_sample = samples[r];
-        l_r = left_sample + right_sample;
-        
-        
-        if (l_r % 2 == 1) {
-          l_r = 2 * l_r + 1;
+    std::string s = std::bitset<16>(sndFile.samplerate()).to_string(); // string conversion
+    
+    for (size_t h = 0; h < s.size(); h++) {
+      bitStream.writeBit('1' == s[h]);
+    }
+    s = std::bitset<8>(sndFile.channels()).to_string(); // string conversion
+    for (size_t h = 0; h < s.size(); h++) {
+      bitStream.writeBit('1' == s[h]);
+    }
+    
+    //TODO: encode mono audio
+    
+    
+    if (sndFile.channels() == 2) {
+      while ((nFrames = sndFile.readf(samples.data(), FRAMES_BUFFER_SIZE))) { // 10 2
+        samples.resize(nFrames * sndFile.channels());
+        for (l = 0, r = 1; l < samples.size() - 1 && r < samples.size(); r += 2, l += 2) {
+          c++;
+          left_sample = samples[l];
+          right_sample = samples[r];
+          double lr = (left_sample + right_sample) / (double) 2;
+          
+          mid = floor(lr);
+          
+          
+          side = left_sample - right_sample;
+          
+          std::cout << "SIDE: " << side << std::endl;
+          std::cout << "MID: " << mid << std::endl;
+          
+          residual = mid - predict(1);
+          // gets Golomb Code for the prediction residual
+          encode_residual(residual, bits, 1);
+          write_to_file(bits, bitStream);
+          //std::cout << "MID: " << mid << std::endl;
+          //std::cout << "MID Bits: " << bits << std::endl;
+          bits.clear();
+          
+          short residual_side = side - predict(0);
+          encode_residual(residual_side, bits, 0);
+          write_to_file(bits, bitStream);
+          //std::cout << "SIDE: " << side << std::endl;
+          //std::cout << "SIDE Bits: " << bits << std::endl;
+          
+          std::cout << "Right: " << right_sample << std::endl;
+          std::cout << "Left: " << left_sample << std::endl;
+          // add new sample to improve Golomb M
+          add_new_sample_block_mid(residual);
+          add_new_sample_block_side(residual_side);
+          
+          // Adds a new sample to use in the predictor
+          add_new_sample(mid, 1);
+          add_new_sample(side, 0);
         }
-        mid = l_r / 2;
-        side = left_sample - right_sample;
         
-        
-        residual = mid - predict(1);
-        // gets Golomb Code for the prediction residual
-        encode_residual(residual, bits, 1);
-        write_to_file(bits, bitStream);
-        std::cout << "MID: " << mid << std::endl;
-        std::cout << "MID Bits: " << bits << std::endl;
-        bits.clear();
-        
-        short residual_side = side - predict(0);
-        encode_residual(residual_side, bits, 0);
-        write_to_file(bits, bitStream);
-        std::cout << "SIDE: " << side << std::endl;
-        std::cout << "SIDE Bits: " << bits << std::endl;
-        
-        // add new sample to improve Golomb M
-        add_new_sample_block_mid(residual);
-        add_new_sample_block_side(residual_side);
-        
-        // Adds a new sample to use in the predictor
-        add_new_sample(mid, 1);
-        add_new_sample(side, 0);
       }
-      
+    } else {
+      while ((nFrames = sndFile.readf(samples.data(), FRAMES_BUFFER_SIZE))) { // 10 2
+        samples.resize(nFrames * sndFile.channels());
+        for (l = 0; l < samples.size(); l++) {
+          c++;
+          left_sample = samples[l];
+          residual = left_sample - predict(1);
+          // gets Golomb Code for the prediction residual
+          encode_residual(residual, bits, 1);
+          write_to_file(bits, bitStream);
+          std::cout << "MID: " << left_sample << std::endl;
+          std::cout << "MID Bits: " << bits << std::endl;
+          bits.clear();
+          
+          add_new_sample_block_mid(residual); // only 1 channel no notion of mid
+          
+          // Adds a new sample to use in the predictor
+          add_new_sample(left_sample, 1);
+        }
+        
+      }
     }
     
     
