@@ -205,7 +205,6 @@ public:
     long long int count = 0;
     long long int mid, side, residual, residual_side;
     short left_sample, right_sample;
-    int s = 0;
     //samples.resize(2);
     int eof_flag = 0;
     std::ofstream f1{"res_bits_1", std::ofstream::app};
@@ -230,12 +229,42 @@ public:
     }
     
     
+    if (nChannels == 2) {
+      // 2 channels decode both M parameter
+      bitStream.getNBit(bits_nChannels, 8);
+      coder_mid.M = 0;
+      for (int h = 0; h < 8; h++) {
+        if (bits_nChannels[h]) // get initial M
+          coder_mid.M += pow(2, 7 - h);
+      }
+      coder_mid.M = pow(2, coder_mid.M);
+      
+      bitStream.getNBit(bits_nChannels, 8);
+      coder_side.M = 0;
+      for (int h = 0; h < 8; h++) {
+        if (bits_nChannels[h]) // get initial M
+          coder_side.M += pow(2, 7 - h);
+      }
+      coder_side.M = pow(2, coder_side.M);
+      
+    } else {
+      // only 1 channel decode only one M parameter
+      bitStream.getNBit(bits_nChannels, 8);
+      coder_mid.M = 0;
+      for (int h = 0; h < 8; h++) {
+        if (bits_nChannels[h]) // get initial M
+          coder_mid.M += pow(2, 7 - h);
+      }
+      coder_mid.M = pow(2, coder_mid.M);
+    }
+    
+    
     int res = open_wav(sfhOut, outFile, nChannels, sampleRate);
     if (res != 0) {
       std::cerr << "File could not be open" << std::endl;
     }
-    std::cout << "nChanenls : " << nChannels;
-    short temp_mid;
+    
+    
     //Decode samplerate and nChannels
     if (nChannels == 2) {
       
@@ -286,7 +315,6 @@ public:
           mid = predict(1) + residual; // recover what was lost from encoding only the residual
           //std::cout << "MID: " << mid << std::endl;
           //std::cout << "MID Bits: " << q_r << std::endl;
-          temp_mid = mid;
         } else if (count % 2 == 1) {
           decode_residiual(&residual_side, q_r, 0);
           f2 << q_r << std::endl;
@@ -308,10 +336,10 @@ public:
           samples.push_back(right_sample);
           
           //s += 2;
-          std::cout << "SIDE: " << side << std::endl;
-          std::cout << "MID: " << mid << std::endl;
-          std::cout << "Right: " << right_sample << std::endl;
-          std::cout << "Left: " << left_sample << std::endl;
+          //std::cout << "SIDE: " << side << std::endl;
+          //std::cout << "MID: " << mid << std::endl;
+          //std::cout << "Right: " << right_sample << std::endl;
+          //std::cout << "Left: " << left_sample << std::endl;
           
           // add value read from file
           add_new_sample_block_mid(residual);

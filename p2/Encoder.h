@@ -232,7 +232,23 @@ public:
       bitStream.writeBit('1' == s[h]);
     }
     
-    //TODO: encode mono audio
+    //TODO: encode save initial M's
+    if (sndFile.channels() == 2) {
+      s = std::bitset<8>(log2(coder_mid.M)).to_string(); // string conversion
+      for (size_t h = 0; h < s.size(); h++) {
+        bitStream.writeBit('1' == s[h]);
+      }
+      
+      s = std::bitset<8>(log2(coder_side.M)).to_string(); // string conversion
+      for (size_t h = 0; h < s.size(); h++) {
+        bitStream.writeBit('1' == s[h]);
+      }
+    } else {
+      s = std::bitset<8>(log2(coder_mid.M)).to_string(); // string conversion
+      for (size_t h = 0; h < s.size(); h++) {
+        bitStream.writeBit('1' == s[h]);
+      }
+    }
     
     
     if (sndFile.channels() == 2) {
@@ -249,8 +265,8 @@ public:
           
           side = left_sample - right_sample;
           
-          std::cout << "SIDE: " << side << std::endl;
-          std::cout << "MID: " << mid << std::endl;
+          //std::cout << "SIDE: " << side << std::endl;
+          //std::cout << "MID: " << mid << std::endl;
           
           residual = mid - predict(1);
           // gets Golomb Code for the prediction residual
@@ -266,8 +282,8 @@ public:
           //std::cout << "SIDE: " << side << std::endl;
           //std::cout << "SIDE Bits: " << bits << std::endl;
           
-          std::cout << "Right: " << right_sample << std::endl;
-          std::cout << "Left: " << left_sample << std::endl;
+          //std::cout << "Right: " << right_sample << std::endl;
+          //std::cout << "Left: " << left_sample << std::endl;
           // add new sample to improve Golomb M
           add_new_sample_block_mid(residual);
           add_new_sample_block_side(residual_side);
@@ -288,8 +304,8 @@ public:
           // gets Golomb Code for the prediction residual
           encode_residual(residual, bits, 1);
           write_to_file(bits, bitStream);
-          std::cout << "MID: " << left_sample << std::endl;
-          std::cout << "MID Bits: " << bits << std::endl;
+          //std::cout << "MID: " << left_sample << std::endl;
+          //std::cout << "MID Bits: " << bits << std::endl;
           bits.clear();
           
           add_new_sample_block_mid(residual); // only 1 channel no notion of mid
