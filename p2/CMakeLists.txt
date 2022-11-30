@@ -32,3 +32,9 @@ target_link_libraries (Encoder sndfile BitStream)
 
 add_executable (Decoder Decoder.cpp)
 target_link_libraries (Decoder sndfile BitStream)
+
+add_executable( imgEncoder imgEncoder.cpp )
+target_link_libraries( imgEncoder BitStream ${OpenCV_LIBS} )
+
+add_executable( imgDecoder imgDecoder.cpp )
+target_link_libraries( imgDecoder BitStream ${OpenCV_LIBS} )

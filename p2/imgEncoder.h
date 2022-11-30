@@ -4,14 +4,10 @@
 #include "BitStream.h"
 #include "GolombCoding.h"
 #include <string>
-#include <sndfile.hh>
 #include <vector>
-#include <fstream>
-#include <iostream>
 #include <cmath>
 #include <opencv2/opencv.hpp>
 #include <string.h>
-#include <algorithm>
 
 
 class imgEncoder{
@@ -94,6 +90,9 @@ public:
         			coder.encode_int((int)img_in.at<cv::Vec3b>(i,j)[2], bits_B);
                     write_to_file(bits_B, bitStream);
 
+                    //std::cout << (int)img_in.at<cv::Vec3b>(i,j)[0] << ',' << (int)img_in.at<cv::Vec3b>(i,j)[1] << ',' << (int)img_in.at<cv::Vec3b>(i,j)[2] << std::endl;
+                    std::cout << bits_R << ',' << bits_G << ',' << bits_B << std::endl;
+
         		}
         		// Nas restantes já é possível
         		else{
@@ -126,6 +125,8 @@ public:
         			// Encode the prediction for green channel
         			coder.encode_int(predict(a_B, b_B, c_B), bits_B);
         			write_to_file(bits_B, bitStream);
+
+                    std::cout << bits_R << ',' << bits_G << ',' << bits_B << std::endl;
 
         		}
 
