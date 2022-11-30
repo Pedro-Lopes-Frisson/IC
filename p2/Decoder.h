@@ -45,6 +45,11 @@ private:
     return 0;
   };
   
+  /*
+   * Predictor that uses 3 values, returns the predicted value
+   *
+   * mid: it is a flag set to 1 returns the value predicted to the mid-channel
+   * */
   int predict(int mid) {
     if (mid) {
       return lastvalues[0] - 3 * lastvalues[1] + 3 * lastvalues[2];
@@ -54,7 +59,12 @@ private:
     
   }
   
-  //int encode_residual(short value, std::string &bits) {
+  /*
+   * decode a GolombCode with the right Golomb Instance
+   * value: address to store the decoded value
+   * bits: string that contains the Golomb Code
+   * mid: flag that indicates that Golomb Instance to use
+   * */
   void decode_residiual(long long int *value, std::string &bits, int mid) {
     if (mid)
       coder_mid.decode_int(value, bits);
@@ -62,6 +72,18 @@ private:
       coder_side.decode_int(value, bits);
   };
   
+  /*
+   * add a new sample to the mid block, this block is used to compute the most fitted value
+   * of the M parameter of the Golomb Code
+   *
+   * xn_1 last value that was read and decoded.
+   *
+   * increments the block_samples_mid variable
+   * pop the first element
+   * push back a new one
+   *
+   * returns nothing
+   * */
   void add_new_sample_block_mid(short xn_1) {
     // increment first that way we check if
     // blocksize values have been written and update M accordingly
@@ -70,6 +92,19 @@ private:
     block_prev_mid.push_back(xn_1);
   }
   
+  
+  /*
+   * add a new sample to the side-block, this block is used to compute the most fitted value
+   * of the M parameter of the Golomb Code
+   *
+   * xn_1 last value that was read and decoded.
+   *
+   * increments the block_samples_side variable
+   * pop the first element
+   * push back a new one
+   *
+   * returns nothing
+   * */
   void add_new_sample_block_side(short xn_1) {
     // increment first that way we check if
     // blocksize values have been written and update M accordingly
@@ -78,6 +113,12 @@ private:
     block_prev_side.push_back(xn_1);
   }
   
+  /*
+   * increments block_samples_? according to the mid flag
+   *
+   * if the block is already filled a new M is calculated before adding the new sample
+   *
+   * */
   void increment_block_samples_counter(int mid) {
     if (mid) {
       if (block_samples_mid == block_prev_mid.size() - 1) {
@@ -99,6 +140,10 @@ private:
     block_samples_side = (block_samples_side + 1) % block_prev_side.size(); // 0 a 1023
   }
   
+  /*
+   * Adds new sample to the predictor of one of the two channels according to the mid flag
+   *
+   */
   
   void add_new_sample(short xn_1, int mid) {
     if (mid) {
@@ -110,6 +155,11 @@ private:
     }
   }
   
+  /*
+   * Calculates new M according to the previous values stored in one of the two vectors
+   * mid: flag that indicates what instance is being updated
+   *
+   * */
   
   void calculate_new_m(int mid) {
     if (mid) {
@@ -207,11 +257,11 @@ public:
     short left_sample, right_sample;
     //samples.resize(2);
     int eof_flag = 0;
-    std::ofstream f1{"res_bits_1", std::ofstream::app};
-    std::ofstream f2{"side_bits_1", std::ofstream::app};
     std::vector<int> remainder_bits;
     short nChannels = 0;
     long long int sampleRate = 0;
+    
+    // read samplerate
     int bits_sR[16];
     bitStream.getNBit(bits_sR, 16);
     for (int h = 0; h < 16; h++) {
@@ -219,7 +269,7 @@ public:
         sampleRate += pow(2, 15 - h);
     }
     
-    
+    // read number of channels
     int bits_nChannels[8];
     bitStream.getNBit(bits_nChannels, 8);
     
@@ -227,36 +277,28 @@ public:
       if (bits_nChannels[h])
         nChannels += pow(2, 7 - h);
     }
-    
-    
-    if (nChannels == 2) {
-      // 2 channels decode both M parameter
-      bitStream.getNBit(bits_nChannels, 8);
-      coder_mid.M = 0;
-      for (int h = 0; h < 8; h++) {
-        if (bits_nChannels[h]) // get initial M
-          coder_mid.M += pow(2, 7 - h);
-      }
-      coder_mid.M = pow(2, coder_mid.M);
-      
-      bitStream.getNBit(bits_nChannels, 8);
-      coder_side.M = 0;
-      for (int h = 0; h < 8; h++) {
-        if (bits_nChannels[h]) // get initial M
-          coder_side.M += pow(2, 7 - h);
-      }
-      coder_side.M = pow(2, coder_side.M);
-      
-    } else {
-      // only 1 channel decode only one M parameter
-      bitStream.getNBit(bits_nChannels, 8);
-      coder_mid.M = 0;
-      for (int h = 0; h < 8; h++) {
-        if (bits_nChannels[h]) // get initial M
-          coder_mid.M += pow(2, 7 - h);
-      }
-      coder_mid.M = pow(2, coder_mid.M);
+  
+  
+    // Decode Golomb Parameter it's the same for both coder's
+    bitStream.getNBit(bits_nChannels, 8);
+    coder_mid.M = 0;
+    for (int h = 0; h < 8; h++) {
+      if (bits_nChannels[h]) // get initial M
+        coder_mid.M += pow(2, 7 - h);
     }
+    coder_mid.M = pow(2, coder_mid.M);
+    coder_side.M = coder_mid.M;
+  
+    // Decode Block Size
+    int bs = 0;
+    // read block size
+    bitStream.getNBit(bits_sR, 16);
+    for (int h = 0; h < 16; h++) {
+      if (bits_sR[h])
+        bs += pow(2, 15 - h);
+    }
+    block_prev_mid.resize(bs);
+    block_prev_side.resize(bs);
     
     
     int res = open_wav(sfhOut, outFile, nChannels, sampleRate);
@@ -309,42 +351,40 @@ public:
           }
         }
         
+        // Values are encoded as pairs, (MID, SIDE)
+        
         if (count % 2 == 0) {
-          f1 << q_r << std::endl;
+  
+          // decode MID residual
           decode_residiual(&residual, q_r, 1);
-          mid = predict(1) + residual; // recover what was lost from encoding only the residual
-          //std::cout << "MID: " << mid << std::endl;
-          //std::cout << "MID Bits: " << q_r << std::endl;
-        } else if (count % 2 == 1) {
-          decode_residiual(&residual_side, q_r, 0);
-          f2 << q_r << std::endl;
-          side = predict(0) + residual_side;
-          // now we have everything we need to recreate the audio channels
-          //std::cout << "SIDE: " << side << std::endl;
-          //std::cout << "SIDE Bits: " << q_r << std::endl;
-          // if mid was odd it means it was changed
-          double h_side = side / (double) 2;
           
+          // Use mid predictor to reconstruct MID Value
+          mid = predict(1) + residual;
+          
+        } else if (count % 2 == 1) {
+          // decode side residual
+          decode_residiual(&residual_side, q_r, 0);
+          
+          // Use side predictor to reconstruct side sample
+          side = predict(0) + residual_side;
+          
+          // Apply formulas to reconstruct LEFT and RIGHT sample
+          double h_side = side / (double) 2;
           left_sample = ceil(mid + h_side);
           right_sample = ceil(mid - h_side);
           
-          //std::cout << count << std::endl;
-          //samples.push_back(left_sample);
-          //samples.push_back(right_sample);
-          //std::cout << "S: " << s << std::endl;
+          // Save samples
           samples.push_back(left_sample);
           samples.push_back(right_sample);
           
-          //s += 2;
-          //std::cout << "SIDE: " << side << std::endl;
-          //std::cout << "MID: " << mid << std::endl;
-          //std::cout << "Right: " << right_sample << std::endl;
-          //std::cout << "Left: " << left_sample << std::endl;
-          
-          // add value read from file
+          // Add samples to the block
+          //this makes the Golomb Parameter adapt according to the last block
+          // if the block samples are big numbers the M will increase
+          // or decrease otherwise
           add_new_sample_block_mid(residual);
           add_new_sample_block_side(residual_side);
-          // add recovered value predict + value read from file
+          
+          // Add reconstructed values to the predictor
           add_new_sample(mid, 1);
           add_new_sample(side, 0);
           
@@ -352,13 +392,6 @@ public:
         
         count++;
         
-        //sample = pred + predict();
-        
-        //std::cout << "Sample Real, " << count++ << ": " << sample << "\n";
-        //std::cout << "Encode : " << pred << "\n";
-        //add_new_sample(sample);
-        
-        //std::cout << q_r << "|" << std::endl;
         bit = bitStream.getBit();
         q_r.clear();
       }
@@ -387,6 +420,7 @@ public:
         
         // read remainder
         int read_bits;
+        // mid coder is used since the audio is MONO
         read_bits = log2(coder_mid.M);
         
         remainder_bits.resize(read_bits);
@@ -400,46 +434,28 @@ public:
             q_r += zero_num;
           }
         }
-        decode_residiual(&residual, q_r, 1);
-        f2 << q_r << std::endl;
-        mid = predict(1) + residual;
-        // now we have everything we need to recreate the audio channels
-        std::cout << "MID: " << mid << std::endl;
-        std::cout << "MID Bits: " << q_r << std::endl;
-        // if mid was odd it means it was changed
         
-        //std::cout << count << std::endl;
-        //samples.push_back(left_sample);
-        //samples.push_back(right_sample);
-        //std::cout << "S: " << s << std::endl;
+        // decode residual using always the same Golomb instance
+        decode_residiual(&residual, q_r, 1);
+        // reconstruct original sample of the only channel
+        mid = predict(1) + residual;
+        
         samples.push_back(mid);
         
-        
-        // add value read from file
+        // Save residual to be able to predict the M of the next block
         add_new_sample_block_mid(residual);
+        
         // add recovered value predict + value read from file
+        // add new sample to predictor
         add_new_sample(mid, 1);
         
-        
         count++;
-        
-        //sample = pred + predict();
-        
-        //std::cout << "Sample Real, " << count++ << ": " << sample << "\n";
-        //std::cout << "Encode : " << pred << "\n";
-        //add_new_sample(sample);
-        
-        //std::cout << q_r << "|" << std::endl;
         bit = bitStream.getBit();
         q_r.clear();
       }
     }
     
     
-    //std::cout << "Escrever ficheiro" << s << std::endl;
-    //std::cout << "Escrever ficheiro" << count << std::endl;
-    //std::cout << "Escrever ficheiro " << samples.size() << std::endl;
-    // Escrever no ficheiro .wav
     bitStream.close();
     sfhOut.writef(samples.data(), samples.size() / sfhOut.channels());
     

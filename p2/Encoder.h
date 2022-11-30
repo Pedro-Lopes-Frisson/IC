@@ -133,14 +133,12 @@ private:
       double m = 0;
       
       // round M to the nearest power of 2
-      //std::cout << std::endl << "Mid, Previous M: " << coder_mid.M;
       if (sample_mean > 0)
         m = ceil(log2(sample_mean / 2));
       
       coder_mid.M = pow(2, m);
       if (m <= 0)
         coder_mid.M = 1;
-      //std::cout << std::endl << "MID, Next M: " << coder_mid.M;
       return;
     }
     double sample_mean = 0;
@@ -157,15 +155,12 @@ private:
     double m = 0;
     
     // round M to the nearest power of 2
-    //std::cout << std::endl << "side, Previous M: " << coder_side.M;
     if (sample_mean > 0)
       m = ceil(log2(sample_mean / 2));
     
     coder_side.M = pow(2, m);
     if (m <= 0)
       coder_side.M = 1;
-    //std::cout << "m: " << m;
-    //std::cout << std::endl << "Side, Next M: " << coder_side.M;
   }
 
 
@@ -223,31 +218,25 @@ public:
     }
     
     std::string s = std::bitset<16>(sndFile.samplerate()).to_string(); // string conversion
-    
+  
+    // write SampleRate
     for (size_t h = 0; h < s.size(); h++) {
       bitStream.writeBit('1' == s[h]);
     }
+    // write Number of Channels
     s = std::bitset<8>(sndFile.channels()).to_string(); // string conversion
     for (size_t h = 0; h < s.size(); h++) {
       bitStream.writeBit('1' == s[h]);
     }
-    
-    //TODO: encode save initial M's
-    if (sndFile.channels() == 2) {
-      s = std::bitset<8>(log2(coder_mid.M)).to_string(); // string conversion
-      for (size_t h = 0; h < s.size(); h++) {
-        bitStream.writeBit('1' == s[h]);
-      }
-      
-      s = std::bitset<8>(log2(coder_side.M)).to_string(); // string conversion
-      for (size_t h = 0; h < s.size(); h++) {
-        bitStream.writeBit('1' == s[h]);
-      }
-    } else {
-      s = std::bitset<8>(log2(coder_mid.M)).to_string(); // string conversion
-      for (size_t h = 0; h < s.size(); h++) {
-        bitStream.writeBit('1' == s[h]);
-      }
+    // write Golomb Parameter its the same for both channels
+    s = std::bitset<8>(log2(coder_mid.M)).to_string(); // string conversion
+    for (size_t h = 0; h < s.size(); h++) {
+      bitStream.writeBit('1' == s[h]);
+    }
+    // write Block size its the same for both channels
+    s = std::bitset<16>(block_prev_mid.size()).to_string(); // string conversion
+    for (size_t h = 0; h < s.size(); h++) {
+      bitStream.writeBit('1' == s[h]);
     }
     
     
@@ -265,25 +254,17 @@ public:
           
           side = left_sample - right_sample;
           
-          //std::cout << "SIDE: " << side << std::endl;
-          //std::cout << "MID: " << mid << std::endl;
           
           residual = mid - predict(1);
           // gets Golomb Code for the prediction residual
           encode_residual(residual, bits, 1);
           write_to_file(bits, bitStream);
-          //std::cout << "MID: " << mid << std::endl;
-          //std::cout << "MID Bits: " << bits << std::endl;
           bits.clear();
           
           short residual_side = side - predict(0);
           encode_residual(residual_side, bits, 0);
           write_to_file(bits, bitStream);
-          //std::cout << "SIDE: " << side << std::endl;
-          //std::cout << "SIDE Bits: " << bits << std::endl;
           
-          //std::cout << "Right: " << right_sample << std::endl;
-          //std::cout << "Left: " << left_sample << std::endl;
           // add new sample to improve Golomb M
           add_new_sample_block_mid(residual);
           add_new_sample_block_side(residual_side);
@@ -304,8 +285,6 @@ public:
           // gets Golomb Code for the prediction residual
           encode_residual(residual, bits, 1);
           write_to_file(bits, bitStream);
-          //std::cout << "MID: " << left_sample << std::endl;
-          //std::cout << "MID Bits: " << bits << std::endl;
           bits.clear();
           
           add_new_sample_block_mid(residual); // only 1 channel no notion of mid

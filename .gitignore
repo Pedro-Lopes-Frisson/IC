@@ -1,2 +1,4 @@
 */**/.idea/**
 */**/build/
+*/**/dataset/enc_files/
+*/**/dataset/dec_files/
