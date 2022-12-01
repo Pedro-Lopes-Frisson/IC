@@ -38,14 +38,14 @@ public:
 		bool q_flag = 0;
 		// Chars to get unary code
 		const char one_num = '1';
-          	const char zero_num = '0';
-          	// Variable to controll the channel we are in
-          	int channel_counter = 0;
+		const char zero_num = '0';
+		// Variable to controll the channel we are in
+		int channel_counter = 0;
 
     	      // We need the image size
       	// Vou fazer sem isto para ver se funciona
       	// Define the matrix to the outfile
-      	cv::Mat img_out = cv::Mat::zeros(cv::Size(512,512), 16);
+      	cv::Mat img_out = cv::Mat::zeros(cv::Size(512,512), CV_8UC1);
 
 		// Run through every bit in the coded file
 		while(bit != EOF){
@@ -53,193 +53,71 @@ public:
       		// For loop to get the pixels in the right position
       		for(int i = 0; i < 512; i++){
       			for(int j = 0; j < 512; j++){
-
-      				// Case of red channel
-      				if(channel_counter == 0){
-      					// Quociente String
-      					std::string q_R;
+					for(int k = 0; k < 3; k++){
+						std::string quocient;
 
       					// Read quocient
       					while(q_flag == 0){
-
       						if(bit == 0){
 	      						q_flag = 1;
-	      						q_R += zero_num;
+	      						quocient += zero_num;
 	      						break;
       						}
       						else if(bit == 1){
-      							q_R += one_num;
+      							quocient += one_num;
       						}
-
       						bit = bitStream.getBit();
       					}
-
+						q_flag = 0;
+						//std::cout << "GETS HERE" << std::endl;
       					// Read reminder
       					// Since bitStream reads integers, we need a vector
       					std::vector<int> r_R_int;
       					int r_R_nBits = 11 - r_R_int.size();
+						//std::cout << r_R_nBits << std::endl;
       					r_R_int.resize(r_R_nBits);
 
       					// Read the amount of bits
       					bitStream.getNBit(r_R_int.data(), r_R_nBits);
-
+						//for(int z = 0; z < 11; z++)
+							//std::cout << r_R_int[z] << std::endl;
       					//Create the string of reminder
-      					std::string r_R;
-      					for (int j = 0; j < r_R_nBits; j++){
-      						if(r_R[j] == 1){
-      							r_R += one_num;
+      					std::string remainder;
+      					for (int x = 0; x < r_R_nBits; x++){
+      						if(r_R_int[x] == 1){
+      							remainder += one_num;
       						}
-      						else if(r_R[j] == 0){
-      							r_R += zero_num;
+      						else if(r_R_int[x] == 0){
+      							remainder += zero_num;
       						}
+							//std::cout << remainder << std::endl;
       					}
 
       					// Concatenare q and r
-      					std::string q_r_R = q_R + r_R;
-
+      					std::string q_r = quocient + remainder;
       					// Make the decodation
       					long long int pred;
-      					coder.decode_int(&pred, q_r_R);
+      					coder.decode_int(&pred, q_r);
       					// Get the pixel
-      					int pixel;
+      					//int pixel;
       					// Ill use the prediction just to see if works
-
+						//std::cout << img_out.at<cv::Vec3b>(i,j) << std::endl;
+						//std::cout << pred << std::endl;
       					// Write pixel
-      					img_out.at<cv::Vec3b>(i,j)[0] = pred;
-
-      					// Increment the channel count
-      					//channel_counter++;
-
-      					// Read a new bit
-						//bit = bitStream.getBit();
-
-      				}// End of the channel RED
-
-      				else if(channel_counter == 1){
-      					// Quociente String
-      					std::string q_G;
-
-      					// Read quocient
-      					while(q_flag == 0){
-
-      						if(bit == 0){
-	      						q_flag = 1;
-	      						q_G += zero_num;
-	      						break;
-      						}
-      						else if(bit == 1){
-      							q_G += one_num;
-      						}
-
-      						bit = bitStream.getBit();
-      					}
-
-      					// Read reminder
-      					// Since bitStream reads integers, we need a vector
-      					std::vector<int> r_G_int;
-      					int r_G_nBits = 11 - r_G_int.size();
-      					r_G_int.resize(r_G_nBits);
-
-      					// Read the amount of bits
-      					bitStream.getNBit(r_G_int.data(), r_G_nBits);
-
-      					//Create the string of reminder
-      					std::string r_G;
-      					for (int j = 0; j < r_G_nBits; j++){
-      						if(r_G[j] == 1){
-      							r_G += one_num;
-      						}
-      						else if(r_G[j] == 0){
-      							r_G += zero_num;
-      						}
-      					}
-
-      					// Concatenare q and r
-      					std::string q_r_G = q_G + r_G;
-
-      					// Make the decodation
-      					long long int pred;
-      					coder.decode_int(&pred, q_r_G);
-      					// Get the pixel
-      					int pixel;
-      					// Ill use the prediction just to see if works
-
-      					// Write pixel
-      					img_out.at<cv::Vec3b>(i,j)[1] = pred;
-
-      					// Increment the channel count
-      					channel_counter++;
-
-      					// Read a new bit
-						bit = bitStream.getBit();
-
-      				}// End of the channel GREEN
-
-      				else{
-      					// Quociente String
-      					std::string q_B;
-
-      					// Read quocient
-      					while(q_flag == 0){
-
-      						if(bit == 0){
-	      						q_flag = 1;
-	      						q_B += zero_num;
-	      						break;
-      						}
-      						else if(bit == 1){
-      							q_B += one_num;
-      						}
-
-      						bit = bitStream.getBit();
-      					}
-
-      					// Read reminder
-      					// Since bitStream reads integers, we need a vector
-      					std::vector<int> r_B_int;
-      					int r_B_nBits = 11 - r_B_int.size();
-      					r_B_int.resize(r_B_nBits);
-
-      					// Read the amount of bits
-      					bitStream.getNBit(r_B_int.data(), r_B_nBits);
-
-      					//Create the string of reminder
-      					std::string r_B;
-      					for (int j = 0; j < r_B_nBits; j++){
-      						if(r_B[j] == 1){
-      							r_B += one_num;
-      						}
-      						else if(r_B[j] == 0){
-      							r_B += zero_num;
-      						}
-      					}
-
-      					// Concatenare q and r
-      					std::string q_r_B = q_B + r_B;
-
-      					// Make the decodation
-      					long long int pred;
-      					coder.decode_int(&pred, q_r_B);
-      					// Get the pixel
-      					int pixel;
-      					// Ill use the prediction just to see if works
-
-      					// Write pixel
-      					img_out.at<cv::Vec3b>(i,j)[2] = pred;
-                              
-      					// Reset because now we will read red next
-      					channel_counter = 0;
-                                        
-      					// Read a new bit
-						bit = bitStream.getBit();
-      				}// End of the channel BLUE
-		      	}
+						std::cout << pred << std::endl;
+      					img_out.at<uchar>(i,j) = pred;
+						q_r.clear();
+					}	
+				}
 		   	}
+			bit = bitStream.getBit();
 		}
 		// Write in to the file
-		imwrite(outFile, img_out);
-            // Close the bitStream
-            bitStream.close();     
+		cv::imwrite(outFile, img_out);
+		//cv::imshow("Decoded", img_out);
+		//cv::waitKey();
+		// Close the bitStream
+		bitStream.close();     
 	}
 };
 

@@ -71,7 +71,7 @@ public:
 		// Run through every pixel of the image
 		for(int i = 0; i < s.height; i++){
         	for(int j = 0; j < s.width; j++){
-
+				std::cout << img_in.at<cv::Vec3b>(i,j) << std::endl;
         		// For the first line we cant predict
         		if(i == 0 || j == 0){
 
@@ -80,18 +80,18 @@ public:
                     std::string bits_G;
                     std::string bits_B;
 
-        			// Encode red channer
-        			coder.encode_int((int)img_in.at<cv::Vec3b>(i,j)[0], bits_R);
-                    write_to_file(bits_R, bitStream);
+        			// Encode blue channer
+        			coder.encode_int((int)img_in.at<cv::Vec3b>(i,j)[0], bits_B);
+                    write_to_file(bits_B, bitStream);
         			// Encode green channer
         			coder.encode_int((int)img_in.at<cv::Vec3b>(i,j)[1], bits_G);
                     write_to_file(bits_G, bitStream);
-        			// Encode blue channer
-        			coder.encode_int((int)img_in.at<cv::Vec3b>(i,j)[2], bits_B);
-                    write_to_file(bits_B, bitStream);
+					// Encode red channer
+        			coder.encode_int((int)img_in.at<cv::Vec3b>(i,j)[2], bits_R);
+                    write_to_file(bits_R, bitStream);
 
                     //std::cout << (int)img_in.at<cv::Vec3b>(i,j)[0] << ',' << (int)img_in.at<cv::Vec3b>(i,j)[1] << ',' << (int)img_in.at<cv::Vec3b>(i,j)[2] << std::endl;
-                    std::cout << bits_R << ',' << bits_G << ',' << bits_B << std::endl;
+                    std::cout << bits_B << ',' << bits_G << ',' << bits_R << std::endl;
 
         		}
         		// Nas restantes já é possível
@@ -101,14 +101,14 @@ public:
                     std::string bits_R;
                     std::string bits_G;
                     std::string bits_B;
-
-        			// abc for red channel
-        			int a_R = (int)img_in.at<cv::Vec3b>(i,j-1)[0];
-        			int b_R = (int)img_in.at<cv::Vec3b>(i-1,j)[0];
-        			int c_R = (int)img_in.at<cv::Vec3b>(i-1,j-1)[0];
-        			// Encode the prediction for red channel
-        			coder.encode_int(predict(a_R, b_R, c_R), bits_R);
-        			write_to_file(bits_R, bitStream);
+					
+					// abc for blue channel
+        			int a_B = (int)img_in.at<cv::Vec3b>(i,j-1)[0];
+        			int b_B = (int)img_in.at<cv::Vec3b>(i-1,j)[0];
+        			int c_B = (int)img_in.at<cv::Vec3b>(i-1,j-1)[0];
+        			// Encode the prediction for green channel
+        			coder.encode_int(predict(a_B, b_B, c_B), bits_B);
+        			write_to_file(bits_B, bitStream);
 
         			// abc for green channel
         			int a_G = (int)img_in.at<cv::Vec3b>(i,j-1)[1];
@@ -118,17 +118,19 @@ public:
         			coder.encode_int(predict(a_G, b_G, c_G), bits_G);
         			write_to_file(bits_G, bitStream);
 
-        			// abc for blue channel
-        			int a_B = (int)img_in.at<cv::Vec3b>(i,j-1)[2];
-        			int b_B = (int)img_in.at<cv::Vec3b>(i-1,j)[2];
-        			int c_B = (int)img_in.at<cv::Vec3b>(i-1,j-1)[2];
-        			// Encode the prediction for green channel
-        			coder.encode_int(predict(a_B, b_B, c_B), bits_B);
-        			write_to_file(bits_B, bitStream);
+        			// abc for red channel
+        			int a_R = (int)img_in.at<cv::Vec3b>(i,j-1)[2];
+        			int b_R = (int)img_in.at<cv::Vec3b>(i-1,j)[2];
+        			int c_R = (int)img_in.at<cv::Vec3b>(i-1,j-1)[2];
+        			// Encode the prediction for red channel
+        			coder.encode_int(predict(a_R, b_R, c_R), bits_R);
+        			write_to_file(bits_R, bitStream);
 
-                    std::cout << bits_R << ',' << bits_G << ',' << bits_B << std::endl;
+                    std::cout << bits_B << ',' << bits_G << ',' << bits_R << std::endl;
 
         		}
+				// cv::imshow("Image", img_in);
+				// cv::waitKey();
 
         	}
     	}
