@@ -72,6 +72,7 @@ private:
 				int pixel = pixelDec(error, prediction);
 
 				desc.at<uchar>(i,j) = pixel;
+				erro.at<uchar>(i,j) = pixel;
 			}
 		}
 	}
