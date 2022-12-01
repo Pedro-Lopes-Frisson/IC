@@ -195,8 +195,6 @@ public:
     short residual;
     //short lastValue = 0;
     std::string bits;
-    std::ofstream f1{"res_bits", std::ofstream::app};
-    std::ofstream f2{"side_bits", std::ofstream::app};
     
     // Percorrer as samples todas
     /*
@@ -300,8 +298,6 @@ public:
     sndFile.writef(samples.data(), samples.size() / sndFile.channels());
     
     bitStream.close();
-    f1.close();
-    f2.close();
   }
 };
 

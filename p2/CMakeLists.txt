@@ -35,3 +35,7 @@ target_link_libraries (Decoder sndfile BitStream)
 
 add_executable (LossyAudioCodec LossyAudioCodec.cpp)
 target_link_libraries (LossyAudioCodec sndfile fftw3 BitStream)
+
+
+add_executable (LossyAudioCodec2 LossyAudioCodec2.cpp)
+target_link_libraries (LossyAudioCodec2 sndfile fftw3 BitStream)
