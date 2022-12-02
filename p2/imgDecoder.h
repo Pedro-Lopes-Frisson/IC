@@ -104,24 +104,90 @@ public:
 		// Variable to controll the channel we are in
 		int channel_counter = 0;
 
+            // To decode the image size
+            long long int height;
+            long long int width;
+            //int num_count_size = 0;
+
+            // Run through necessary bits in the coded file to get the img size
+            //while(num_count_size !=  2){
+            for(int num_count_size = 0; num_count_size < 2; num_count_size++) {
+
+                  std::string quocient;
+                  // Read Quocient
+                  while(q_flag == 0){
+
+                        if(bit == 0){
+                              q_flag = 1;
+                              quocient += zero_num;
+                              break;
+                        }
+                        else if(bit == 1){
+                              quocient += one_num;
+                        }
+                        bit = bitStream.getBit();
+                  }
+                  //Read remeinder
+                  std::vector<int> reminder_int;
+                  int reminder_size = ceil(log2((int) pow(2, 10)));
+                  reminder_int.resize(reminder_size);
+
+                  // Read the amount of bits
+                  bitStream.getNBit(reminder_int.data(), reminder_size);
+
+                  //Create the string of reminder
+                  std::string remainder;
+                  for (int x = 0; x < reminder_size; x++){
+                        if(reminder_int[x] == 1){
+                              remainder += one_num;
+                        }
+                        else if(reminder_int[x] == 0){
+                              remainder += zero_num;
+                        }
+                  }
+
+                  // Concatenare q and r
+                  std::string q_r = quocient + remainder;
+                  // Make the decodation
+                  long long int size;
+                  coder.decode_int(&size, q_r);
+
+                  if(num_count_size == 0){
+                        height = size;
+                        std::cout << height << std::endl;
+                  }
+                  else if (num_count_size == 1){
+                        width = size;
+                        std::cout << width << std::endl;
+                  }
+
+                  // Clear varaibles
+                  quocient.clear();
+                  remainder.clear();
+                  q_r.clear();
+                  q_flag = 0;
+                  //Read new bit from next iteration
+                  bit = bitStream.getBit();
+            }
+
     	      // We need the image size
       	// Vou fazer sem isto para ver se funciona
       	// Define the matrix to the outfile
-      	cv::Mat error_B = cv::Mat::zeros(cv::Size(512,512), CV_8UC1);
-		cv::Mat error_G = cv::Mat::zeros(cv::Size(512,512), CV_8UC1);
-		cv::Mat error_R = cv::Mat::zeros(cv::Size(512,512), CV_8UC1);
+      	cv::Mat error_B = cv::Mat::zeros(cv::Size(width,height), CV_8UC1);
+		cv::Mat error_G = cv::Mat::zeros(cv::Size(width,height), CV_8UC1);
+		cv::Mat error_R = cv::Mat::zeros(cv::Size(width,height), CV_8UC1);
 
-		cv::Mat img_out = cv::Mat::zeros(cv::Size(512,512), CV_8UC3);
-		cv::Mat img_out_B = cv::Mat::zeros(cv::Size(512,512), CV_8UC1);
-		cv::Mat img_out_G = cv::Mat::zeros(cv::Size(512,512), CV_8UC1);
-		cv::Mat img_out_R = cv::Mat::zeros(cv::Size(512,512), CV_8UC1);
+		cv::Mat img_out = cv::Mat::zeros(cv::Size(width,height), CV_8UC3);
+		cv::Mat img_out_B = cv::Mat::zeros(cv::Size(width,height), CV_8UC1);
+		cv::Mat img_out_G = cv::Mat::zeros(cv::Size(width,height), CV_8UC1);
+		cv::Mat img_out_R = cv::Mat::zeros(cv::Size(width,height), CV_8UC1);
 
 		// Run through every bit in the coded file
 		while(bit != EOF){
 
       		// For loop to get the pixels in the right position
-      		for(int i = 0; i < 512; i++){
-      			for(int j = 0; j < 512; j++){
+      		for(int i = 0; i < height; i++){
+      			for(int j = 0; j < width; j++){
 					for(int k = 0; k < 3; k++){
 						std::string quocient;
 
@@ -191,8 +257,8 @@ public:
 		JPEG_LS_predictor(error_R, img_out_R);
 		//std::cout << img_out_B.at<uchar>(0,0) << std::endl;
 
-		for(int i = 0; i < 512; i++){
-        	for(int j = 0; j < 512; j++){
+		for(int i = 0; i < height; i++){
+                  for(int j = 0; j < width; j++){
 				img_out.at<cv::Vec3b>(i,j)[0] = img_out_B.at<uchar>(i,j);
 				img_out.at<cv::Vec3b>(i,j)[1] = img_out_G.at<uchar>(i,j);
 				img_out.at<cv::Vec3b>(i,j)[2] = img_out_R.at<uchar>(i,j);

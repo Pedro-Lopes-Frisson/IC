@@ -107,12 +107,12 @@ public:
 		// number os pixels of the image
 		cv::Size s = img_in.size(); 
 
-		cv::Mat erro_R = cv::Mat::zeros(s.height, s.width, CV_8UC1);
-		cv::Mat erro_G = cv::Mat::zeros(s.height, s.width, CV_8UC1);
-		cv::Mat erro_B = cv::Mat::zeros(s.height, s.width, CV_8UC1);
-		cv::Mat img_in_R = cv::Mat::zeros(s.height, s.width, CV_8UC1);
-		cv::Mat img_in_G = cv::Mat::zeros(s.height, s.width, CV_8UC1);
-		cv::Mat img_in_B = cv::Mat::zeros(s.height, s.width, CV_8UC1);
+		cv::Mat erro_R = cv::Mat::zeros(s.width, s.height, CV_8UC1);
+		cv::Mat erro_G = cv::Mat::zeros(s.width, s.height, CV_8UC1);
+		cv::Mat erro_B = cv::Mat::zeros(s.width, s.height, CV_8UC1);
+		cv::Mat img_in_R = cv::Mat::zeros(s.width, s.height, CV_8UC1);
+		cv::Mat img_in_G = cv::Mat::zeros(s.width, s.height, CV_8UC1);
+		cv::Mat img_in_B = cv::Mat::zeros(s.width, s.height, CV_8UC1);
 
 		for(int i = 0; i < s.height; i++){
         	for(int j = 0; j < s.width; j++){
@@ -123,10 +123,12 @@ public:
 		}		
 		
 		// Encode the image size
-		//std::string bits_Height;
-		//std::string bits_Width;
-		//coder.encode_int(); // Height
-		//coder.encode_int(); // Width
+		std::string bits_Height;
+		std::string bits_Width;
+		coder.encode_int((int)s.height, bits_Height); // Height
+		write_to_file(bits_Height, bitStream);
+		coder.encode_int((int)s.width, bits_Width); // Width
+		write_to_file(bits_Width, bitStream);
 
 		JPEG_LS_predictor(img_in_R, erro_R);
 		JPEG_LS_predictor(img_in_G, erro_G);
