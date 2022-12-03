@@ -4,6 +4,6 @@
 int main(int argc, char* argv[]){
   imgDecoder decoder {};
   std::string inFile = "lena_encoded";
-  std::string outFile = "lena_decoded.png";
+  std::string outFile = "lena_decoded.ppm";
   decoder.decode_coded_image(inFile, outFile);
 }
