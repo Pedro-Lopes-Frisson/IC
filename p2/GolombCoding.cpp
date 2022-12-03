@@ -9,12 +9,12 @@
 using namespace std;
 
 int main() {
-  GolombCoder n = GolombCoder(10);
+  GolombCoder n = GolombCoder((int) pow(2, 10));
   //GolombCoder n = GolombCoder((int) pow(2, 16));
   string bits;
   //int og_nums[12] = {1, -1, 2, -2, 3, -3, -4, 5, -5, -6, 6, 0};
   long long int num_dec;
-  for (long long int  i = 0; i < 10; i++) {
+  for (long long int  i = 509; i < 515; i++) {
     cout << "Num " << i;
     n.encode_int(i, bits);
     

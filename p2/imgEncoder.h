@@ -98,13 +98,20 @@ public:
     // Inicialize / defining all variables needed
     // number os pixels of the image
     cv::Size s = img_in.size();
+    std::cout << "Size: " << s << std::endl;
     
-    cv::Mat erro_R = cv::Mat::zeros(s.width, s.height, CV_8UC1);
-    cv::Mat erro_G = cv::Mat::zeros(s.width, s.height, CV_8UC1);
-    cv::Mat erro_B = cv::Mat::zeros(s.width, s.height, CV_8UC1);
-    cv::Mat img_in_R = cv::Mat::zeros(s.width, s.height, CV_8UC1);
-    cv::Mat img_in_G = cv::Mat::zeros(s.width, s.height, CV_8UC1);
-    cv::Mat img_in_B = cv::Mat::zeros(s.width, s.height, CV_8UC1);
+    //cv::Mat erro_R = cv::Mat::zeros(s.width, s.height, CV_8UC1);
+    //cv::Mat erro_G = cv::Mat::zeros(s.width, s.height, CV_8UC1);
+    //cv::Mat erro_B = cv::Mat::zeros(s.width, s.height, CV_8UC1);
+    //cv::Mat img_in_R = cv::Mat::zeros(s.width, s.height, CV_8UC1);
+    //cv::Mat img_in_G = cv::Mat::zeros(s.width, s.height, CV_8UC1);
+    //cv::Mat img_in_B = cv::Mat::zeros(s.width, s.height, CV_8UC1);
+    cv::Mat erro_R = cv::Mat::zeros(s.height, s.width, CV_8UC1);
+    cv::Mat erro_G = cv::Mat::zeros(s.height, s.width, CV_8UC1);
+    cv::Mat erro_B = cv::Mat::zeros(s.height, s.width, CV_8UC1);
+    cv::Mat img_in_R = cv::Mat::zeros(s.height, s.width, CV_8UC1);
+    cv::Mat img_in_G = cv::Mat::zeros(s.height, s.width, CV_8UC1);
+    cv::Mat img_in_B = cv::Mat::zeros(s.height, s.width, CV_8UC1);
     
     for (int i = 0; i < s.height; i++) {
       for (int j = 0; j < s.width; j++) {
@@ -133,7 +140,7 @@ public:
         std::string bits_R;
         std::string bits_G;
         std::string bits_B;
-        std::cout << "1" << std::endl;
+        //std::cout << "1" << std::endl;
         
         // Encode blue channel
         coder.encode_int((int) erro_B.at<uchar>(i, j), bits_B);

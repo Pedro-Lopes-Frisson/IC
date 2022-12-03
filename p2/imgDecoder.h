@@ -208,7 +208,8 @@ public:
             // Read reminder
             // Since bitStream reads integers, we need a vector
             std::vector<int> r_R_int;
-            int reminder_size = 10;
+            //int reminder_size = 10;
+            int reminder_size = 11 - quocient.size();
             r_R_int.resize(reminder_size);
             
             // Read the amount of bits
