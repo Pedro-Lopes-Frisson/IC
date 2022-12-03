@@ -124,16 +124,24 @@ public:
       reminder_int.resize(reminder_size);
       
       // Read the amount of bits
-      bitStream.getNBit(reminder_int.data(), reminder_size);
+      //bitStream.getNBit(reminder_int.data(), reminder_size);
       
       //Create the string of reminder
       std::string remainder;
       for (int x = 0; x < reminder_size; x++) {
-        if (reminder_int[x] == 1) {
+        bit = bitStream.getBit();
+        if (bit == 1) {
           remainder += one_num;
-        } else if (reminder_int[x] == 0) {
+        } else if (bit == 0) {
           remainder += zero_num;
         }
+        if (bit == EOF) {
+          std::cerr << "EOF";
+          break;
+        }
+      }
+      if (bit == EOF) {
+        break;
       }
       
       // Concatenare q and r
@@ -180,7 +188,7 @@ public:
           for (int k = 0; k < 3; k++) {
             std::string quocient;
             bit = bitStream.getBit();
-            if(bit == EOF)
+            if (bit == EOF)
               break;
             
             // Read quocient
@@ -193,7 +201,7 @@ public:
                 quocient += one_num;
               }
               bit = bitStream.getBit();
-              if(bit == EOF)
+              if (bit == EOF)
                 break;
             }
             q_flag = 0;
@@ -214,7 +222,13 @@ public:
               } else if (r_R_int[x] == 0) {
                 remainder += zero_num;
               }
+              if (r_R_int[x] == EOF) {
+                break;
+              }
               //std::cout << remainder << std::endl;
+            }
+            if (r_R_int[reminder_size - 1] == EOF) {
+              break;
             }
             
             // Concatenare q and r
@@ -240,13 +254,13 @@ public:
               std::cout << "R: " << q_r << std::endl;
             }
           }
-          if(bit == EOF)
+          if (bit == EOF)
             break;
         }
-        if(bit == EOF)
+        if (bit == EOF)
           break;
       }
-      if(bit == EOF)
+      if (bit == EOF)
         break;
     }
     JPEG_LS_predictor(error_B, img_out_B);
