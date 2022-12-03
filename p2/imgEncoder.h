@@ -158,6 +158,7 @@ private:
   		double K = 0;
   		if(B_channel_mean > 0){
   			K = ceil(log2(B_channel_mean / 2));
+  			std::cout << "M_B: " << pow(2, K) << std::endl;
   			coder_B.M = pow(2, K);
   		}
   		else{
@@ -179,6 +180,7 @@ private:
   		double K = 0;
   		if(G_channel_mean > 0){
   			K = ceil(log2(G_channel_mean / 2));
+  			std::cout << "M_G: " << pow(2, K) << std::endl;
   			coder_G.M = pow(2, K);
   		}
   		else{
@@ -200,6 +202,7 @@ private:
   		double K = 0;
   		if(R_channel_mean > 0){
   			K = ceil(log2(R_channel_mean / 2));
+  			std::cout << "M_R: " << pow(2, K) << std::endl;
   			coder_R.M = pow(2, K);
   		}
   		else{
@@ -296,18 +299,21 @@ public:
         std::string bits_G;
         std::string bits_B;
         
+        //std::cout << "Valor: " << (int) erro_B.at<uchar>(i, j) << std::endl;
         coder_B.encode_int((int) erro_B.at<uchar>(i, j), bits_B);
         write_to_file(bits_B, bitStream);
         //std::cout << "B: " << bits_B << std::endl;
         // Add the encode value of the channel to the vector
         add_new_value((int) erro_B.at<uchar>(i, j), 0);
 
+        //std::cout << "Valor: " << (int) erro_G.at<uchar>(i, j) << std::endl;
         coder_G.encode_int((int) erro_G.at<uchar>(i, j), bits_G);
         write_to_file(bits_G, bitStream);
         //std::cout << "G: " << bits_G << std::endl;
         // Add the encode value of the channel to the vector
         add_new_value((int) erro_G.at<uchar>(i, j), 1);
 
+        //std::cout << "Valor: " << (int) erro_R.at<uchar>(i, j) << std::endl;
         coder_R.encode_int((int) erro_R.at<uchar>(i, j), bits_R);
         write_to_file(bits_R, bitStream);
         //std::cout << "R: " << bits_R << std::endl;
