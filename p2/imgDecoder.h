@@ -218,9 +218,9 @@ private:
 public:
   // Inicialize the class to decode
   imgDecoder() {
-    block_prev_R.resize(50);
-    block_prev_G.resize(50);
-    block_prev_B.resize(50);
+    block_prev_R.resize(1024);
+    block_prev_G.resize(1024);
+    block_prev_B.resize(1024);
     
     R_channel_counter = 0;
     G_channel_counter = 0;

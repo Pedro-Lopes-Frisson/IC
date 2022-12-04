@@ -8,6 +8,8 @@
 #include <cmath>
 #include <opencv2/opencv.hpp>
 #include <string.h>
+#include <fstream>
+#include <iostream>
 
 
 class imgEncoder {
@@ -215,9 +217,9 @@ public:
   
   // Inicialize the class to encode
   imgEncoder() {
-  	block_prev_R.resize(50);
-  	block_prev_G.resize(50);
-  	block_prev_B.resize(50);
+  	block_prev_R.resize(1024);
+  	block_prev_G.resize(1024);
+  	block_prev_B.resize(1024);
 
   	this->R_channel_counter = 0;
   	this->G_channel_counter = 0;
@@ -244,6 +246,14 @@ public:
     // Inicialize / defining all variables needed
     // number os pixels of the image
     cv::Size s = img_in.size();
+
+    // To get the pixel values and the decoded value
+    std::ofstream RP{"R_pixel_enc_1024", std::ofstream::app};
+    std::ofstream RR{"R_res_enc_1024", std::ofstream::app};
+    std::ofstream GP{"G_pixel_enc_1024", std::ofstream::app};
+    std::ofstream GR{"G_res_enc_1024", std::ofstream::app};
+    std::ofstream BP{"B_pixel_enc_1024", std::ofstream::app};
+    std::ofstream BR{"B_res_enc_1024", std::ofstream::app};
     
     //cv::Mat erro_R = cv::Mat::zeros(s.width, s.height, CV_8UC1);
     //cv::Mat erro_G = cv::Mat::zeros(s.width, s.height, CV_8UC1);
@@ -261,8 +271,11 @@ public:
     for (int i = 0; i < s.height; i++) {
       for (int j = 0; j < s.width; j++) {
         img_in_R.at<uchar>(i, j) = img_in.at<cv::Vec3b>(i, j)[2];
+        RP << (int) img_in.at<cv::Vec3b>(i, j)[2] << std::endl;
         img_in_G.at<uchar>(i, j) = img_in.at<cv::Vec3b>(i, j)[1];
+        GP << (int) img_in.at<cv::Vec3b>(i, j)[1] << std::endl;
         img_in_B.at<uchar>(i, j) = img_in.at<cv::Vec3b>(i, j)[0];
+        BP << (int) img_in.at<cv::Vec3b>(i, j)[0] << std::endl;
       }
     }
     
@@ -307,6 +320,7 @@ public:
         //std::cout << "B: " << bits_B << std::endl;
         // Add the encode value of the channel to the vector
         add_new_value((int) erro_B.at<uchar>(i, j), 0);
+        BR << (int) erro_B.at<uchar>(i, j) << std::endl;
 
         //std::cout << "Valor: " << (int) erro_G.at<uchar>(i, j) << std::endl;
         coder_G.encode_int((int) erro_G.at<uchar>(i, j), bits_G);
@@ -314,6 +328,7 @@ public:
         //std::cout << "G: " << bits_G << std::endl;
         // Add the encode value of the channel to the vector
         add_new_value((int) erro_G.at<uchar>(i, j), 1);
+        GR << (int) erro_G.at<uchar>(i, j) << std::endl;
 
         //std::cout << "Valor: " << (int) erro_R.at<uchar>(i, j) << std::endl;
         coder_R.encode_int((int) erro_R.at<uchar>(i, j), bits_R);
@@ -321,10 +336,17 @@ public:
         //std::cout << "R: " << bits_R << std::endl;
         // Add the encode value of the channel to the vector
         add_new_value((int) erro_R.at<uchar>(i, j), 2);
+        RR << (int) erro_R.at<uchar>(i, j) << std::endl;
 
       }
     }
     bitStream.close();
+    RP.close();
+    RR.close();
+    GP.close();
+    GR.close();
+    BP.close();
+    BR.close();
   }
 };
 
