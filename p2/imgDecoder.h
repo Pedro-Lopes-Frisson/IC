@@ -83,34 +83,36 @@ private:
   int pixelDec(int erro, int prediction) {
     return erro + prediction;
   }
-
-
-  void add_new_value(int value, short channel){
+  
+  
+  void add_new_value(int value, short channel) {
+    std::cout << "New Val " << std::endl;
     // Blue channel
-    if(channel == 0){
+    if (channel == 0) {
       increment_pixel_channel_counter(channel);
       block_prev_B.erase(block_prev_B.begin());
       block_prev_B.push_back(value);
     }
-    // Green Channel
-    else if(channel == 1){
+      // Green Channel
+    else if (channel == 1) {
       increment_pixel_channel_counter(channel);
       block_prev_G.erase(block_prev_G.begin());
       block_prev_G.push_back(value);
     }
-    // Red Channel
-    else{
+      // Red Channel
+    else {
       increment_pixel_channel_counter(channel);
       block_prev_R.erase(block_prev_R.begin());
       block_prev_R.push_back(value);
     }
   }
-
-  void increment_pixel_channel_counter(short channel){
+  
+  void increment_pixel_channel_counter(short channel) {
+    std::cout << "Increment " << channel << std::endl;
     // Blue channel
-    if(channel == 0){
+    if (channel == 0) {
       // Vector that have size of block is full, new M can be calculated
-      if(B_channel_counter == block_prev_B.size() - 1){
+      if (B_channel_counter == block_prev_B.size() - 1) {
         // Update M
         calculate_new_M(channel);
       }
@@ -118,21 +120,25 @@ private:
       B_channel_counter = (B_channel_counter + 1) % block_prev_B.size();
       return;
     }
-    // Green Channel
-    else if(channel == 1){
+      // Green Channel
+    else if (channel == 1) {
+      std::cout << "ola" << block_prev_G.size() << std::endl;
       // Vector that have size of block is full, new M can be calculated
-      if(G_channel_counter == block_prev_G.size() - 1){
+      if (G_channel_counter == block_prev_G.size() - 1) {
+        std::cout << "ola" << block_prev_G.size() << std::endl;
         // Update M
-        calculate_new_M(channel);
+        calculate_new_M(1);
+        std::cout << "ola" << block_prev_G.size() << std::endl;
       }
       // Increment the counter
       G_channel_counter = (G_channel_counter + 1) % block_prev_G.size();
+      std::cout << "ola" << block_prev_G.size() << std::endl;
       return;
     }
-    // Red Channel
-    else{
+      // Red Channel
+    else {
       // Vector that have size of block is full, new M can be calculated
-      if(R_channel_counter == block_prev_R.size() - 1){
+      if (R_channel_counter == block_prev_R.size() - 1) {
         // Update M
         calculate_new_M(channel);
       }
@@ -141,70 +147,68 @@ private:
       return;
     }
   }
-
-  void calculate_new_M(short channel){
+  
+  void calculate_new_M(short channel) {
+    std::cout << "Channel New M: " << channel << std::endl;
     // Blue channel
-    if(channel == 0){
+    if (channel == 0) {
       double B_channel_mean = 0;
       // Run througth every value of channel
-      for(auto v: block_prev_B){
+      for (auto v: block_prev_B) {
         B_channel_mean += 2 * v;
       }
       B_channel_mean /= block_prev_B.size();
-
+      
       // Get M
       double K = 0;
-      if(B_channel_mean > 1){
+      if (B_channel_mean > 1) {
         K = ceil(log2(B_channel_mean / 2));
         //std::cout << "M_B: " << pow(2, K) << std::endl;
         coder_B.M = pow(2, K);
-      }
-      else{
-      coder_B.M = 1;
+      } else {
+        coder_B.M = 1;
       }
       return;
-
+      
     }
-    // Green Channel
-    else if(channel == 1){
+      // Green Channel
+    else if (channel == 1) {
       double G_channel_mean = 0;
       // Run througth every value of channel
-      for(auto v: block_prev_G){
+      for (auto v: block_prev_G) {
         G_channel_mean += 2 * v;
       }
       G_channel_mean /= block_prev_G.size();
-
+      
       // Get M
       double K = 0;
-      if(G_channel_mean > 1){
+      if (G_channel_mean > 1) {
         K = ceil(log2(G_channel_mean / 2));
         //std::cout << "M_G: " << pow(2, K) << std::endl;
         coder_G.M = pow(2, K);
-      }
-      else{
-      coder_G.M = 1;
+      } else {
+        coder_G.M = 1;
       }
       return;
-
+      
     }
-    // Red Channel
-    else{
+      // Red Channel
+    else {
       double R_channel_mean = 0;
       // Run througth every value of channel
-      for(auto v: block_prev_R){
+      for (auto v: block_prev_R) {
         R_channel_mean += 2 * v;
       }
       R_channel_mean /= block_prev_R.size();
-
+      
       // Get M
       double K = 0;
-      if(R_channel_mean > 1){
+      if (R_channel_mean > 1) {
         K = ceil(log2(R_channel_mean / 2));
         //std::cout << "M_R: " << pow(2, K) << std::endl;
         coder_R.M = pow(2, K);
-      }
-      else{
-      coder_R.M = 1;
+      } else {
+        coder_R.M = 1;
       }
       return;
     }
@@ -217,15 +221,15 @@ public:
     block_prev_R.resize(50);
     block_prev_G.resize(50);
     block_prev_B.resize(50);
-
+    
     R_channel_counter = 0;
     G_channel_counter = 0;
     B_channel_counter = 0;
-
+    
     std::fill(block_prev_R.begin(), block_prev_R.end(), 0);
     std::fill(block_prev_G.begin(), block_prev_G.end(), 0);
     std::fill(block_prev_B.begin(), block_prev_B.end(), 0);
-  
+    
   }
   
   // Function to decode the image
@@ -307,15 +311,15 @@ public:
         width = size;
         //std::cout << width << std::endl;
         bit = bitStream.getBit();
-      } else if (num_count_size == 2){
+      } else if (num_count_size == 2) {
         coder_R.M = size;
         //std::cout << coder_R.M << std::endl;
         bit = bitStream.getBit();
-      } else if (num_count_size == 3){
+      } else if (num_count_size == 3) {
         coder_G.M = size;
         //std::cout << coder_G.M << std::endl;
         bit = bitStream.getBit();
-      } else if (num_count_size == 4){
+      } else if (num_count_size == 4) {
         coder_B.M = size;
         //std::cout << coder_B.M << std::endl;
       }
@@ -370,7 +374,14 @@ public:
             // Since bitStream reads integers, we need a vector
             std::vector<int> r_R_int;
             //int reminder_size = 10;
-            int reminder_size = 11 - quocient.size();
+            int reminder_size;
+            if(k == 0)
+              reminder_size = log2(coder_B.M);
+            else if (k == 1)
+              reminder_size = log2(coder_G.M);
+            else
+              reminder_size = log2(coder_R.M);
+            
             r_R_int.resize(reminder_size);
             
             // Read the amount of bits
@@ -402,18 +413,15 @@ public:
             if (k == 0) {
               coder_B.decode_int(&dec, q_r);
               error_B.at<uchar>(i, j) = dec;
-              std::cout << "B: " << dec << ", B_bits: " << q_r << std::endl;
-              add_new_value((int) img_out_B.at<uchar>(i, j), 0);
+              add_new_value(dec, 0);
             } else if (k == 1) {
               coder_G.decode_int(&dec, q_r);
               error_G.at<uchar>(i, j) = dec;
-              std::cout << "G: " << dec << ", G_bits: " << q_r << std::endl;
-              add_new_value((int) img_out_G.at<uchar>(i, j), 1);
+              add_new_value(dec, 1);
             } else {
               coder_R.decode_int(&dec, q_r);
               error_R.at<uchar>(i, j) = dec;
-              std::cout << "R: " << dec << ", R_bits: " << q_r << std::endl;
-              add_new_value((int) img_out_R.at<uchar>(i, j), 2);
+              add_new_value(dec, 2);
             }
           }
           if (bit == EOF)
@@ -437,12 +445,12 @@ public:
         // Add the encode value of the channel to the vector
         //add_new_value((int) img_out_B.at<uchar>(i, j), 0);
         std::cout << "B: " << img_out_B.at<uchar>(i, j) << std::endl;
-
+        
         img_out.at<cv::Vec3b>(i, j)[1] = img_out_G.at<uchar>(i, j);
         // Add the encode value of the channel to the vector
         //add_new_value((int) img_out_G.at<uchar>(i, j), 1);
         std::cout << "G: " << img_out_G.at<uchar>(i, j) << std::endl;
-
+        
         img_out.at<cv::Vec3b>(i, j)[2] = img_out_R.at<uchar>(i, j);
         // Add the encode value of the channel to the vector
         //add_new_value((int) img_out_R.at<uchar>(i, j), 2);
