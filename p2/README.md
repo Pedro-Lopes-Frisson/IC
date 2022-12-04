@@ -41,3 +41,4 @@
 - file_sizes.sh
 - run_encoder.sh
 - run_decoder.sh
+- plot_bar_pixels.m
