@@ -11,6 +11,7 @@ Usage: ./build/p2/imgDecoder
 
 
 # Folder Structure
+```
 ..
 └── p2
     └── dataset
@@ -18,6 +19,7 @@ Usage: ./build/p2/imgDecoder
         ├── enc_files
         ├── dec_files
         └── images
+```
 
 1. p2 folder containing source code
 2. p2/dataset contains audio files, image files, encoded files, decoded files.
