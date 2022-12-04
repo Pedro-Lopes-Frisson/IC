@@ -30,6 +30,8 @@ Usage: ./build/p2/imgDecoder
 - compressed_ratio_graphs.py
 - exetime_bs.py
 - stat (linux utility)
+- awk
+- grep
 - file_sizes.sh
 - run_encoder.sh
 - run_decoder.sh
