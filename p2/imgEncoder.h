@@ -12,8 +12,8 @@
 
 class imgEncoder {
 private:
-  	// Defining the Golomb
-  	GolombCoder coder{(int) pow(2, 10)};
+  // Defining the Golomb
+  GolombCoder coder{(int) pow(2, 10)};
 	GolombCoder coder_R{(int) pow(2, 10)};
 	GolombCoder coder_G{(int) pow(2, 10)};
 	GolombCoder coder_B{(int) pow(2, 10)};
@@ -22,10 +22,9 @@ private:
 	std::vector<int> block_prev_G;
 	std::vector<int> block_prev_B;
 	// Pixel channel counters
-  	size_t R_channel_counter = 0;
+  size_t R_channel_counter = 0;
 	size_t G_channel_counter = 0;
 	size_t B_channel_counter = 0;
-
   
   // Functions
   int predict(int a, int b, int c) {
@@ -216,9 +215,9 @@ public:
   
   // Inicialize the class to encode
   imgEncoder() {
-  	block_prev_R.resize(100);
-  	block_prev_G.resize(100);
-  	block_prev_B.resize(100);
+  	block_prev_R.resize(50);
+  	block_prev_G.resize(50);
+  	block_prev_B.resize(50);
 
   	this->R_channel_counter = 0;
   	this->G_channel_counter = 0;
@@ -283,14 +282,17 @@ public:
     std::string inicial_M_R;
     coder.encode_int(coder_R.M, inicial_M_R);
     write_to_file(inicial_M_R, bitStream);
+    std::cout << "M_R: " << coder_R.M << ", Bits: " << inicial_M_R << std::endl;
 
     std::string inicial_M_G;
     coder.encode_int(coder_G.M, inicial_M_G);
     write_to_file(inicial_M_G, bitStream);
+    std::cout << "M_G: " << coder_G.M << ", Bits: " << inicial_M_G << std::endl;
 
     std::string inicial_M_B;
     coder.encode_int(coder_B.M, inicial_M_B);
     write_to_file(inicial_M_B, bitStream);
+    std::cout << "M_B: " << coder_B.M << ", Bits: " << inicial_M_B << std::endl;
     
     // Run through every pixel of the image
     for (int i = 0; i < s.height; i++) {
@@ -302,21 +304,21 @@ public:
         //std::cout << "Valor: " << (int) erro_B.at<uchar>(i, j) << std::endl;
         coder_B.encode_int((int) erro_B.at<uchar>(i, j), bits_B);
         write_to_file(bits_B, bitStream);
-        std::cout << "B: " << bits_B << std::endl;
+        //std::cout << "B: " << bits_B << std::endl;
         // Add the encode value of the channel to the vector
         add_new_value((int) erro_B.at<uchar>(i, j), 0);
 
         //std::cout << "Valor: " << (int) erro_G.at<uchar>(i, j) << std::endl;
         coder_G.encode_int((int) erro_G.at<uchar>(i, j), bits_G);
         write_to_file(bits_G, bitStream);
-        std::cout << "G: " << bits_G << std::endl;
+        //std::cout << "G: " << bits_G << std::endl;
         // Add the encode value of the channel to the vector
         add_new_value((int) erro_G.at<uchar>(i, j), 1);
 
         //std::cout << "Valor: " << (int) erro_R.at<uchar>(i, j) << std::endl;
         coder_R.encode_int((int) erro_R.at<uchar>(i, j), bits_R);
         write_to_file(bits_R, bitStream);
-        std::cout << "R: " << bits_R << std::endl;
+        //std::cout << "R: " << bits_R << std::endl;
         // Add the encode value of the channel to the vector
         add_new_value((int) erro_R.at<uchar>(i, j), 2);
 
