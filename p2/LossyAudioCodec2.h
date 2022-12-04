@@ -1,19 +1,26 @@
-#ifndef P2_DECODER_H
-#define P2_DECODER_H
+//
+// Created by whoknows on 12/1/22.
+//
+
+#ifndef IC_LOSSYAUDIOCODEC2_H
+#define IC_LOSSYAUDIOCODEC2_H
 
 #include "BitStream.h"
 #include "GolombCoding.h"
 #include <string>
 #include <sndfile.hh>
 #include <vector>
+#include <map>
 #include <fstream>
 #include <iostream>
 #include <cmath>
-#include <map>
+#include <bitset>
 
 
-class Decoder {
+class LossyAudioCodec2 {
 private:
+  const static long FRAMES_BUFFER_SIZE = 65536;
+  
   std::vector<short> block_prev_mid;
   std::vector<short> block_prev_side;
   GolombCoder coder_mid{10};
@@ -22,28 +29,49 @@ private:
   std::vector<short> lastvaluesSide;
   int block_samples_mid = 0;
   int block_samples_side = 0;
+  int quantization_factor = 0;
   
   
-  int open_wav(SndfileHandle &inFile, std::string filename, int channels, long long int srate) {
-    inFile = SndfileHandle(filename.data(), SFM_WRITE, 65538, channels, srate);
-    
-    if (inFile.error()) {
+  int open_wav_read(SndfileHandle &file, std::string filename) {
+    file = SndfileHandle(filename);
+    if (file.error()) {
       std::cerr << "Error: invalid input file\n";
       return 1;
     }
     
-    if ((inFile.format() & SF_FORMAT_TYPEMASK) != SF_FORMAT_WAV) {
+    if ((file.format() & SF_FORMAT_TYPEMASK) != SF_FORMAT_WAV) {
       std::cerr << "Error: file is not in WAV format\n";
       return 1;
     }
     
-    if ((inFile.format() & SF_FORMAT_SUBMASK) != SF_FORMAT_PCM_16) {
+    if ((file.format() & SF_FORMAT_SUBMASK) != SF_FORMAT_PCM_16) {
+      std::cerr << "Error: file is not in PCM_16 format\n";
+      return 1;
+    }
+    return 0;
+  };
+  
+  int open_wav_write(SndfileHandle &file, std::string filename, int channels, long long int srate) {
+    file = SndfileHandle(filename.data(), SFM_WRITE, 65538, channels, srate);
+    
+    if (file.error()) {
+      std::cerr << "Error: invalid input file\n";
+      return 1;
+    }
+    
+    if ((file.format() & SF_FORMAT_TYPEMASK) != SF_FORMAT_WAV) {
+      std::cerr << "Error: file is not in WAV format\n";
+      return 1;
+    }
+    
+    if ((file.format() & SF_FORMAT_SUBMASK) != SF_FORMAT_PCM_16) {
       std::cerr << "Error: file is not in PCM_16 format\n";
       return 1;
     }
     
     return 0;
   };
+  
   
   /*
    * Predictor that uses 3 values, returns the predicted value
@@ -70,6 +98,14 @@ private:
       coder_mid.decode_int(value, bits);
     else
       coder_side.decode_int(value, bits);
+  };
+  
+  void encode_residual(short value, std::string &bits, int mid) {
+    if (mid)
+      coder_mid.encode_int(value, bits);
+    else
+      coder_side.encode_int(value, bits);
+    
   };
   
   /*
@@ -211,27 +247,43 @@ private:
     //std::cout << "m: " << m;
     //std::cout << std::endl << "Side, Next M: " << coder_side.M;
   }
-
-
-public:
-  Decoder(int k, int b) {
-    coder_side.M = pow(2, k);
-    coder_mid.M = pow(2, k);
-    block_samples_mid = 0;
-    block_samples_side = 0;
-    block_prev_side.resize(b);
-    block_prev_mid.resize(b);
-    
-    lastvalues.resize(3);
-    lastvaluesSide.resize(3);
-    std::fill(lastvaluesSide.begin(), lastvaluesSide.end(), 0);
-    std::fill(lastvalues.begin(), lastvalues.end(), 0);
-    std::fill(block_prev_side.begin(), block_prev_side.end(), 0);
-    std::fill(block_prev_mid.begin(), block_prev_mid.end(), 0);
+  
+  void write_to_file(std::string bits, BitStream &bitStream) {
+    for (size_t i = 0; i < bits.size(); i++) {
+      bitStream.writeBit(bits[i] == '1');
+    }
   }
   
-  // inFile é o ficheiro codificado - outFile é o ficheiro descodificado
+  void quantize_value(short *num) {
+    *num = (*num >> (quantization_factor) << (quantization_factor));
+  }
+
+public:
+  LossyAudioCodec2(int k, int block, int q_f) {
+    coder_side.M = pow(2, k);
+    coder_mid.M = pow(2, k);
+    block_prev_side.resize(block);
+    block_prev_mid.resize(block);
+    this->block_samples_mid = 0;
+    this->block_samples_side = 0;
+    lastvalues.resize(3);
+    lastvaluesSide.resize(3);
+    quantization_factor = q_f;
+    
+    std::fill(lastvalues.begin(), lastvalues.end(), 0);
+    std::fill(lastvaluesSide.begin(), lastvaluesSide.end(), 0);
+    std::fill(block_prev_mid.begin(), block_prev_mid.end(), 0);
+    std::fill(block_prev_side.begin(), block_prev_side.end(), 0);
+  }
+  
   void decode_Encoded_audio_file(std::string inFile, std::string outFile) {
+    
+    this->block_samples_mid = 0;
+    this->block_samples_side = 0;
+    std::fill(lastvalues.begin(), lastvalues.end(), 0);
+    std::fill(lastvaluesSide.begin(), lastvaluesSide.end(), 0);
+    std::fill(block_prev_mid.begin(), block_prev_mid.end(), 0);
+    std::fill(block_prev_side.begin(), block_prev_side.end(), 0);
     SndfileHandle sfhOut;
     
     // Abrir o ficheiro codificado
@@ -277,8 +329,8 @@ public:
       if (bits_nChannels[h])
         nChannels += pow(2, 7 - h);
     }
-  
-  
+    
+    
     // Decode Golomb Parameter it's the same for both coder's
     bitStream.getNBit(bits_nChannels, 8);
     coder_mid.M = 0;
@@ -288,7 +340,7 @@ public:
     }
     coder_mid.M = pow(2, coder_mid.M);
     coder_side.M = coder_mid.M;
-  
+    
     // Decode Block Size
     int bs = 0;
     // read block size
@@ -301,11 +353,10 @@ public:
     block_prev_side.resize(bs);
     
     
-    int res = open_wav(sfhOut, outFile, nChannels, sampleRate);
+    int res = open_wav_write(sfhOut, outFile, nChannels, sampleRate);
     if (res != 0) {
       std::cerr << "File could not be open" << std::endl;
     }
-    
     
     //Decode samplerate and nChannels
     if (nChannels == 2) {
@@ -354,7 +405,7 @@ public:
         // Values are encoded as pairs, (MID, SIDE)
         
         if (count % 2 == 0) {
-  
+          
           // decode MID residual
           decode_residiual(&residual, q_r, 1);
           
@@ -372,7 +423,12 @@ public:
           double h_side = side / (double) 2;
           left_sample = ceil(mid + h_side);
           right_sample = ceil(mid - h_side);
-          
+  
+          std::cout << "Sample l  " << left_sample << std::endl;
+          std::cout << "Sample r " << right_sample << std::endl;
+  
+          //std::cout << "Residual MID: " << residual << std::endl;
+          //std::cout << "Residual SIDE: " << residual_side << std::endl;
           // Save samples
           samples.push_back(left_sample);
           samples.push_back(right_sample);
@@ -462,6 +518,131 @@ public:
     
   }
   
+  void encode_audio_file(std::string inFile, std::string outFile) {
+    // abrir audio file
+    SndfileHandle sndFile;
+    BitStream bitStream = BitStream(outFile.data(), BT_WRITE);
+    int res = open_wav_read(sndFile, inFile);
+    if (res != 0) {
+      std::cerr << "File could not be open" << std::endl;
+    }
+    // Definir variaveis
+    size_t nFrames;
+    std::vector<short> samples(FRAMES_BUFFER_SIZE * sndFile.channels());
+    short residual;
+    //short lastValue = 0;
+    std::string bits;
+    
+    // Percorrer as samples todas
+    /*
+    encode_residual(sndFile.samplerate(), bits);
+    write_to_file(bits, bitStream);
+    
+    encode_residual(sndFile.channels(), bits);
+    write_to_file(bits, bitStream);
+     */
+    short left_sample, right_sample;
+    long long int mid, side;
+    long long int c = 0;
+    size_t l;
+    size_t r;
+    
+    if (sndFile.channels() > 2) {
+      std::cerr << "Too many Channels";
+      std::exit(-1);
+    }
+    
+    std::string s = std::bitset<16>(sndFile.samplerate()).to_string(); // string conversion
+    
+    // write SampleRate
+    for (size_t h = 0; h < s.size(); h++) {
+      bitStream.writeBit('1' == s[h]);
+    }
+    // write Number of Channels
+    s = std::bitset<8>(sndFile.channels()).to_string(); // string conversion
+    for (size_t h = 0; h < s.size(); h++) {
+      bitStream.writeBit('1' == s[h]);
+    }
+    // write Golomb Parameter its the same for both channels
+    s = std::bitset<8>(log2(coder_mid.M)).to_string(); // string conversion
+    for (size_t h = 0; h < s.size(); h++) {
+      bitStream.writeBit('1' == s[h]);
+    }
+    // write Block size its the same for both channels
+    s = std::bitset<16>(block_prev_mid.size()).to_string(); // string conversion
+    for (size_t h = 0; h < s.size(); h++) {
+      bitStream.writeBit('1' == s[h]);
+    }
+    
+    
+    if (sndFile.channels() == 2) {
+      while ((nFrames = sndFile.readf(samples.data(), FRAMES_BUFFER_SIZE))) { // 10 2
+        samples.resize(nFrames * sndFile.channels());
+        for (l = 0, r = 1; l < samples.size() - 1 && r < samples.size(); r += 2, l += 2) {
+          c++;
+          left_sample = samples[l];
+          right_sample = samples[r];
+          double lr = (left_sample + right_sample) / (double) 2;
+          
+          mid = floor(lr);
+          
+          
+          side = left_sample - right_sample;
+          
+          
+          residual = mid - predict(1);
+          //quantize_value(&residual);
+          
+          // gets Golomb Code for the prediction residual
+          encode_residual(residual, bits, 1);
+          write_to_file(bits, bitStream);
+          bits.clear();
+          
+          short residual_side = side - predict(0);
+          quantize_value(&residual_side);
+  
+          encode_residual(residual_side, bits, 0);
+          write_to_file(bits, bitStream);
+          std::cout << "Sample l  " << left_sample << std::endl;
+          std::cout << "Sample r " << right_sample << std::endl;
+          
+          // add new sample to improve Golomb M
+          add_new_sample_block_mid(residual);
+          add_new_sample_block_side(residual_side);
+          
+          // Adds a new sample to use in the predictor
+          add_new_sample(mid, 1);
+          add_new_sample(side, 0);
+        }
+        
+      }
+    } else {
+      while ((nFrames = sndFile.readf(samples.data(), FRAMES_BUFFER_SIZE))) { // 10 2
+        samples.resize(nFrames * sndFile.channels());
+        for (l = 0; l < samples.size(); l++) {
+          c++;
+          left_sample = samples[l];
+          residual = left_sample - predict(1);
+          // gets Golomb Code for the prediction residual
+          encode_residual(residual, bits, 1);
+          write_to_file(bits, bitStream);
+          bits.clear();
+          
+          add_new_sample_block_mid(residual); // only 1 channel no notion of mid
+          
+          // Adds a new sample to use in the predictor
+          add_new_sample(left_sample, 1);
+        }
+        
+      }
+    }
+    
+    
+    sndFile.writef(samples.data(), samples.size() / sndFile.channels());
+    
+    bitStream.close();
+  }
 };
 
-#endif //P2_DECODER_H
+
+#endif //IC_LOSSYAUDIOCODEC2_H
