@@ -25,6 +25,8 @@ Usage: ./build/p2/imgDecoder
 # Scripts for creating CSV and Graphs, and also compile information related to the developed code
 
 - createDataCsv.py
+- compressed_ratio_graphs.py
+- exetime_bs.py
 - stat (linux utility)
 - file_sizes.sh
 - run_encoder.sh
