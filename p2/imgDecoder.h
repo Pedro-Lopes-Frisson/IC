@@ -400,9 +400,6 @@ public:
               }
               //std::cout << remainder << std::endl;
             }
-            if (r_R_int[reminder_size - 1] == EOF) {
-              break;
-            }
             
             // Concatenare q and r
             std::string q_r = quocient + remainder;
