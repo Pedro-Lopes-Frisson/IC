@@ -402,17 +402,17 @@ public:
             if (k == 0) {
               coder_B.decode_int(&dec, q_r);
               error_B.at<uchar>(i, j) = dec;
-              //std::cout << "B: " << dec << ", B_bits: " << q_r << std::endl;
+              std::cout << "B: " << dec << ", B_bits: " << q_r << std::endl;
               add_new_value((int) img_out_B.at<uchar>(i, j), 0);
             } else if (k == 1) {
               coder_G.decode_int(&dec, q_r);
               error_G.at<uchar>(i, j) = dec;
-              //std::cout << "G: " << dec << ", G_bits: " << q_r << std::endl;
+              std::cout << "G: " << dec << ", G_bits: " << q_r << std::endl;
               add_new_value((int) img_out_G.at<uchar>(i, j), 1);
             } else {
               coder_R.decode_int(&dec, q_r);
               error_R.at<uchar>(i, j) = dec;
-              //std::cout << "R: " << dec << ", R_bits: " << q_r << std::endl;
+              std::cout << "R: " << dec << ", R_bits: " << q_r << std::endl;
               add_new_value((int) img_out_R.at<uchar>(i, j), 2);
             }
           }
