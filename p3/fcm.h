@@ -8,7 +8,9 @@
 #include <ostream>
 #include <unordered_map>
 #include <map>
+#include <vector>
 #include <string>
+#include <fstream>
 
 
 class fcm {
@@ -16,7 +18,15 @@ private:
   int k;
   double smoothing_parameter;
   char *context;
-  std::unordered_map <std::string, std::map<char, size_t>> table;
+  const static size_t ALPHABET_LENGTH = 27;
+  const static size_t ALPHABET_START = 'a';
+  
+  std::unordered_map <std::string, std::vector<size_t>> table;
+  std::unordered_map <std::string, std::vector<double>> table_probabilities;
+  // vector goes from a to z and then space
+  
+  std::ifstream file_in;
+  std::ofstream file_out;
 
 
 public:
@@ -24,30 +34,24 @@ public:
    *
    * @param k order of the model
    * @param smooth_parameter avoid probabilities that are 0
+   * @param fIn file name containing the text to be analysed
+   * @param fOut file name to save the table probabilities matrix
    */
-  fcm(int k, double smooth_parameter);
+  fcm(int order, double smooth_parameter, const char *fIn, const char *fOut);
   
   /**
    *
-   * @param filename  Name of the file containg a text in some languages
-   * @param file_in  pointer to an ostream structure
+   * @param mode If 0 it opens the file with filename to read else it opens for writing purposes
+   * @param filename  Name of the file contain a text in some languages
    */
-  void open_file(const char *filename, std::ostream &file_in);
+  void open_file(const char *filename, int mode);
   
-  /**
-   *
-   * @param store_char  allocated pointer to store read char
-   * @param f file to read from
-   * @return 1 if it succeeded EOF otherwise
-   */
-  int get_char(char *store_char, std::ostream &f);
   
   /**
    * Builds the context
-   * @param context context string
    * @param new_char new char to include in the context string
    */
-  void add_to_context(const char *new_char);
+  void add_to_context(char *new_char);
   
   /**
    *
@@ -58,9 +62,22 @@ public:
   /**
    * Calculate probabilities
    */
-   void calculate_probabilities();
+  void calculate_probabilities(void);
   
+  /**
+   * Count occurrences
+   */
+  void count_occurrences(void);
   
+  /**
+   * Print Occurrences
+   */
+  void print_occurrences(void);
+  
+  /**
+   * Print probabilities
+   */
+  void print_probabilities(void);
 };
 
 
