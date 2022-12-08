@@ -11,73 +11,91 @@
 #include <vector>
 #include <string>
 #include <fstream>
+#include <cmath>
 
 
 class fcm {
 private:
-  int k;
-  double smoothing_parameter;
-  char *context;
-  const static size_t ALPHABET_LENGTH = 27;
-  const static size_t ALPHABET_START = 'a';
-  
-  std::unordered_map <std::string, std::vector<size_t>> table;
-  std::unordered_map <std::string, std::vector<double>> table_probabilities;
-  // vector goes from a to z and then space
-  
-  std::ifstream file_in;
-  std::ofstream file_out;
+	// TODO Create ALPHABET charset ¿
+	int k;
+	double smoothing_parameter;
+	std::vector<char> context;
+	const static size_t ALPHABET_LENGTH = 26;
+	const static size_t ALPHABET_START = 'a';
+
+	std::unordered_map <std::string, std::vector<size_t>> table;
+	std::unordered_map <std::string, std::vector<double>> table_probabilities;
+	double model_entropy;
+	// vector goes from a to z and then space
+
+	std::ifstream file_in;
+	std::ofstream file_out;
 
 
 public:
-  /**
-   *
-   * @param k order of the model
-   * @param smooth_parameter avoid probabilities that are 0
-   * @param fIn file name containing the text to be analysed
-   * @param fOut file name to save the table probabilities matrix
-   */
-  fcm(int order, double smooth_parameter, const char *fIn, const char *fOut);
-  
-  /**
-   *
-   * @param mode If 0 it opens the file with filename to read else it opens for writing purposes
-   * @param filename  Name of the file contain a text in some languages
-   */
-  void open_file(const char *filename, int mode);
-  
-  
-  /**
-   * Builds the context
-   * @param new_char new char to include in the context string
-   */
-  void add_to_context(char *new_char);
-  
-  /**
-   *
-   * @param new_char Column, current character. (Map key)
-   */
-  void increment_counter(const char *new_char);
-  
-  /**
-   * Calculate probabilities
-   */
-  void calculate_probabilities(void);
-  
-  /**
-   * Count occurrences
-   */
-  void count_occurrences(void);
-  
-  /**
-   * Print Occurrences
-   */
-  void print_occurrences(void);
-  
-  /**
-   * Print probabilities
-   */
-  void print_probabilities(void);
+	/**
+	 *
+	 * @param k order of the model
+	 * @param smooth_parameter avoid probabilities that are 0
+	 * @param fIn file name containing the text to be analysed
+	 * @param fOut file name to save the table probabilities matrix
+	 */
+	fcm(int order, double smooth_parameter, const char *fIn, const char *fOut);
+
+	/**
+	 *
+	 * @param mode If 0 it opens the file with filename to read else it opens for writing purposes
+	 * @param filename  Name of the file contain a text in some languages
+	 */
+	void open_file(const char *filename, int mode);
+
+
+	/**
+	 * Builds the context
+ * @param new_char new char to include in the context string
+	 */
+	void add_to_context(char *new_char);
+
+	/**
+	 *
+	 * @param new_char Column, current character. (Map key)
+	 */
+	void increment_counter(const char *new_char);
+
+	/**
+	 * Calculate probabilities
+	 */
+	void calculate_probabilities(void);
+
+	/**
+	 * Calculate entropy
+	 */
+	void calculate_entropy(void);
+
+	/**
+	 * Count occurrences
+	 */
+	void count_occurrences(void);
+
+	/**
+	 * Print Occurrences
+	 */
+	void print_occurrences(void);
+
+	/**
+	 * Print probabilities
+	 */
+	void print_probabilities(void);
+
+	/**
+	 * Create possible contexts that can be formed with the ALPHABET(a to z)
+	 * @param contexts vector to store contexts
+	 * @param order length of string to be formed
+	 * @param prefix initial prefix should be "", recursive function takes care of the appending to
+	 * this variable
+	 */
+
+	void possible_contexts(std::vector <std::string> &contexts, int order, std::string prefix);
 };
 
 
