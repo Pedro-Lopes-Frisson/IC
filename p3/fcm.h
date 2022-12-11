@@ -20,7 +20,7 @@ private:
 	int k;
 	double smoothing_parameter;
 	std::vector<char> context;
-	const static size_t ALPHABET_LENGTH = 26;
+	const static size_t ALPHABET_LENGTH = 27;
 	const static size_t ALPHABET_START = 'a';
 
 	std::unordered_map <std::string, std::vector<size_t>> table;

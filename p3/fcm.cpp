@@ -21,7 +21,7 @@ fcm::fcm(int order, double smooth_parameter, const char *fIn
 	fcm::possible_contexts(contexts, order, "");
 	for (auto ctx: contexts) {
 		table.insert(pair < string,
-		             vector < size_t >> (ctx, vector<size_t>(ALPHABET_LENGTH, smoothing_parameter)));
+		             vector < size_t >> (ctx, vector<size_t>(ALPHABET_LENGTH, 0)));
 
 		table_probabilities.insert(pair < string,
 		                           vector < double >> (ctx, vector<double>(ALPHABET_LENGTH, 0.0f)));
@@ -50,7 +50,10 @@ fcm::possible_contexts(vector <string> &contexts, int order, string prefix) {
 		string newPrefix;
 
 		// Next character of input added
-		newPrefix = prefix + (char) (ALPHABET_START + i);
+		if (i == ALPHABET_LENGTH - 1)
+			newPrefix = prefix + ' ';
+		else
+			newPrefix = prefix + (char) (ALPHABET_START + i);
 
 		// k is decreased, because
 		// we have added a new character
@@ -79,23 +82,23 @@ void fcm::add_to_context(char *new_char) {
 }
 
 void fcm::increment_counter(const char *new_char) {
-	std::cout << "Context: " << context.data() << "NEW CHAR: " << *new_char << endl;
 	// check if context exists
 	if (table.find(context.data()) == table.end()) {
 		// context does not exist create it
 		// create vector
 		vector <size_t> new_vector(ALPHABET_LENGTH);
 
-		// fill vector with default_value smoothing parameter
-		// so that there are no probabilities which are zero
-		fill(new_vector.begin(), new_vector.end(), smoothing_parameter);
+		fill(new_vector.begin(), new_vector.end(), 0);
 		table.insert(std::pair < std::string,
 		             std::vector < size_t >> (context.data(), new_vector));
 
 	}
 
 	// increment counter at this point is safe just to increment it
-	table[context.data()][(size_t)(*new_char) - ALPHABET_START]++;
+	if (*new_char != ' ')
+		table[context.data()][(size_t)(*new_char) - ALPHABET_START]++;
+	else
+		table[context.data()][ALPHABET_LENGTH - 1]++; // space
 	return;
 }
 
@@ -108,7 +111,7 @@ void fcm::calculate_probabilities() {
 		// begin of the vector, end of the vector, sum starts at smoothing_parameter instead of 0
 
 		cumulative_sum = accumulate(entry.second.begin(), entry.second.end(),
-		                            smoothing_parameter);
+		                            0);
 
 		// key did not exist create entry
 		if (table_probabilities.find(entry.first) == table_probabilities.end()) {
@@ -125,7 +128,6 @@ void fcm::calculate_probabilities() {
 		// for each value inside vector calculate probability
 		size_t cnt;
 		for (size_t i = 0; i < entry.second.size(); i++) {
-			// TODO: FIX FORMULA
 			cnt = entry.second[i];
 			table_probabilities[entry.first][i] =
 					(cnt + smoothing_parameter) /
@@ -155,6 +157,7 @@ void fcm::calculate_entropy() {
 	model_entropy = 0;
 	for (auto &entry: table_probabilities) {
 		for (auto prob: entry.second) {
+			if (prob == (double) 0.0) continue;
 			model_entropy += -(prob * log2(prob));
 		}
 	}
@@ -165,20 +168,26 @@ void fcm::count_occurrences() {
 	int i = 0;
 	char c;
 	// read first char
-	c = file_in.get();
+	c = tolower(file_in.get());
+
 	// fill buffer
 	while (i < this->k && c != EOF) {
-		add_to_context(&c);
-		c = tolower(file_in.get());
-		i++;
+		if (isalpha(c) || c == ' ') {
+			add_to_context(&c);
+			c = tolower(file_in.get());
+			i++;
+		}
 	}
 
 	// Count and add to context
-	while (isalpha(c)) {
+	while (c != EOF) {
+		if (!isalpha(c) && c != ' ') {
+			c = tolower(file_in.get());
+			continue;
+		}
 		increment_counter(&c);
 		add_to_context(&c);
 		c = tolower(file_in.get());
-
 	}
 
 }
@@ -188,7 +197,10 @@ void fcm::print_probabilities() {
 	cout << "TABLE OF PROBABILITIES" << endl;
 	cout << "Context/Symbol | ";
 	for (size_t i = 0; i < ALPHABET_LENGTH; i++) {
-		cout << (char) (ALPHABET_START + i) << "  |";
+		if (i == ALPHABET_LENGTH - 1)
+			cout << "<SPACE>  |";
+		else
+			cout << (char) (ALPHABET_START + i) << "  |";
 	}
 	cout << endl;
 
@@ -202,14 +214,17 @@ void fcm::print_probabilities() {
 
 void fcm::print_occurrences() {
 	cout << "TABLE OF OCCURRENCES" << endl;
-	cout << "Context/Symbol |    ";
+	cout << "| Context/Symbol |    ";
 	for (size_t i = 0; i < ALPHABET_LENGTH; i++) {
-		cout << (char) (ALPHABET_START + i) << " | ";
+		if (i == ALPHABET_LENGTH - 1)
+			cout << "<SPACE>  |";
+		else
+			cout << (char) (ALPHABET_START + i) << "  |";
 	}
 	cout << endl;
 
 	for (auto &entry: table) {
-		cout << entry.first << "                 |";
+		cout << " | " << entry.first << " |";
 		for (auto prob: entry.second)
 			cout << " " << prob << " |";
 		cout << endl;
@@ -218,9 +233,10 @@ void fcm::print_occurrences() {
 }
 
 int main() {
-	fcm f(1, 1, "file1.txt", "file1.txt.out");
+	fcm f(1, 1, "example.txt", "file1.txt.out");
 	f.count_occurrences();
 	f.print_occurrences();
 	f.calculate_probabilities();
+	f.calculate_entropy();
 	//f.print_probabilities();
 };
