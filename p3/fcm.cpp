@@ -154,6 +154,7 @@ void fcm::calculate_probabilities() {
 //
 
 void fcm::calculate_entropy() {
+	// TODO: FIX THIS
 	model_entropy = 0;
 	for (auto &entry: table_probabilities) {
 		for (auto prob: entry.second) {
