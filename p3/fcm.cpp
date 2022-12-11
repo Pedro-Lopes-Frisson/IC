@@ -156,9 +156,13 @@ void fcm::calculate_probabilities() {
 void fcm::calculate_entropy() {
 	// TODO: FIX THIS
 	model_entropy = 0;
+	double prob;
 	for (auto &entry: table_probabilities) {
-		for (auto prob: entry.second) {
-			if (prob == (double) 0.0) continue;
+		for (size_t i = 0; i < entry.second.size(); i++) {
+			// if count was zero then don't use it to calculate the entropy
+			if (table.find(entry.first)->second[i] == (double) 0.0) continue;
+			prob = entry.second[i];
+
 			model_entropy += -(prob * log2(prob));
 		}
 	}
@@ -234,10 +238,10 @@ void fcm::print_occurrences() {
 }
 
 int main() {
-	fcm f(1, 1, "example.txt", "file1.txt.out");
+	fcm f(1, 0, "example.txt", "file1.txt.out");
 	f.count_occurrences();
 	f.print_occurrences();
 	f.calculate_probabilities();
 	f.calculate_entropy();
-	//f.print_probabilities();
+	f.print_probabilities();
 };
