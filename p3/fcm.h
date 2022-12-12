@@ -71,7 +71,7 @@ public:
 	/**
 	 * Calculate entropy
 	 */
-	void calculate_entropy(void);
+	double calculate_entropy(void);
 
 	/**
 	 * Count occurrences

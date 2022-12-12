@@ -159,7 +159,7 @@ void fcm::calculate_probabilities() {
 // cout << endl;
 //
 
-void fcm::calculate_entropy() {
+double fcm::calculate_entropy() {
 	// TODO: FIX THIS
 	model_entropy = 0;
 	double ctx_entropy = 0;
@@ -179,6 +179,8 @@ void fcm::calculate_entropy() {
 		model_entropy += (cum_sum / chars_read) * ctx_entropy;
 	}
 	cout << "Entropy: " << model_entropy << endl;
+
+	return model_entropy;
 }
 
 void fcm::count_occurrences() {
