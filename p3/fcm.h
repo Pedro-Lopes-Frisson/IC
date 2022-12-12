@@ -18,6 +18,7 @@ class fcm {
 private:
 	// TODO Create ALPHABET charset ¿
 	int k;
+	size_t chars_read = 0;
 	double smoothing_parameter;
 	std::vector<char> context;
 	const static size_t ALPHABET_LENGTH = 27;
