@@ -66,12 +66,12 @@ public:
 	/**
 	 * Calculate probabilities
 	 */
-	void calculate_probabilities(void);
+	std::unordered_map <std::string, std::vector<double>> calculate_probabilities(void);
 
 	/**
 	 * Calculate entropy
 	 */
-	double calculate_entropy(void);
+	double calculate_entropy(std::unordered_map <std::string, std::vector<double>> map);
 
 	/**
 	 * Count occurrences

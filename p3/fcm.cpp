@@ -103,7 +103,7 @@ void fcm::increment_counter(const char *new_char) {
 	return;
 }
 
-void fcm::calculate_probabilities() {
+unordered_map <string, vector<double>> fcm::calculate_probabilities() {
 	size_t cumulative_sum;
 	for (auto &entry: table) {
 		//first is the context
@@ -141,6 +141,8 @@ void fcm::calculate_probabilities() {
 		}
 
 	}
+
+	return table_probabilities;
 }
 
 //oid fcm::print_probabilities() {
@@ -159,14 +161,14 @@ void fcm::calculate_probabilities() {
 // cout << endl;
 //
 
-double fcm::calculate_entropy() {
+double fcm::calculate_entropy(unordered_map <string, vector<double>> map) {
 	// TODO: FIX THIS
 	model_entropy = 0;
 	double ctx_entropy = 0;
 	double prob;
 	double cum_sum = 0;
 
-	for (auto &entry: table_probabilities) {
+	for (auto &entry: map) {
 		ctx_entropy = 0;
 		for (size_t i = 0; i < entry.second.size(); i++) {
 			// if count was zero then don't use it to calculate the entropy
@@ -178,7 +180,7 @@ double fcm::calculate_entropy() {
 		cum_sum = accumulate(table[entry.first].begin(), table[entry.first].end(), 0);
 		model_entropy += (cum_sum / chars_read) * ctx_entropy;
 	}
-	cout << "Entropy: " << model_entropy << endl;
+	//cout << "Entropy: " << model_entropy << endl;
 
 	return model_entropy;
 }
@@ -257,11 +259,11 @@ void fcm::print_occurrences() {
 	cout << endl;
 }
 
-int main() {
-	fcm f(5, 0.0001, "example.txt", "file1.txt.out");
-	f.count_occurrences();
-	f.print_occurrences();
-	f.calculate_probabilities();
-	f.print_probabilities();
-	f.calculate_entropy();
-};
+//int main() {
+//	fcm f(5, 0.0001, "example.txt", "file1.txt.out");
+//	f.count_occurrences();
+//	f.print_occurrences();
+//	f.calculate_probabilities();
+//	f.print_probabilities();
+//	f.calculate_entropy();
+//};

@@ -13,8 +13,8 @@ SET (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BASE_DIR}/build/p3)
 
 add_library(fcm fcm.h fcm.cpp)
 
-add_executable( fcm_pg fcm.cpp )
-target_link_libraries( fcm_pg fcm )
+#add_executable( fcm_pg fcm.cpp )
+#target_link_libraries( fcm_pg fcm )
 
-add_executable( findlang.cpp findlang.cpp )
-target_link_libraries( findlang.cpp fcm )
+add_executable( findlang findlang.cpp )
+target_link_libraries( findlang fcm )
