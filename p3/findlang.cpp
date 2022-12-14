@@ -66,8 +66,8 @@ int main(int argc, char *argv[]){
     }
 
     // Verify if alpha is a number (integer or float)
-    if(isPositiveIntegerNumber(argv[2]) == false){
-    	cerr << "The argument alph must be a number\nMinimal Usage: ./build/p3/findlang <k> <alpha> <ToBeAnalizedTextFile> <LanguageTextFile>\n";
+    if(isNumber(argv[2]) == false){
+    	cerr << "The argument alph must be a positive number\nMinimal Usage: ./build/p3/findlang <k> <alpha> <ToBeAnalizedTextFile> <LanguageTextFile>\n";
         return 1;
     }
 
