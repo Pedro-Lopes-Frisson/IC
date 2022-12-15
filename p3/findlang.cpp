@@ -72,7 +72,8 @@ int main(int argc, char *argv[]){
     }
 
 	// Store the ToBeAnalizedTextFile
-	char* ToBeAnalizedTextFile = argv[3];
+	//cout << typeid(argv[3]).name() << endl; Pc = pointer to char
+	char *ToBeAnalizedTextFile = argv[3];
 	// k argument
 	int k = atoi(argv[1]);
 	// alpha argument
@@ -80,22 +81,19 @@ int main(int argc, char *argv[]){
 
 	// Read the number of arguments
 	int n_Languages = argc - 4; // -4 because the path, k, alpha and ToBeAnalizedTextFile
-	//cout << "Number os languages(dictionaries): " << n_Languages << endl;
 	// Store the text files on a vector
-	vector<char*> all_LanguageTextFile;
+	vector<char *> all_LanguageTextFile;
 
 	// Store all LanguageTextFile
 	for (int i = 0; i < n_Languages; i++){
 
 		//Push the file into the vector
-		//cout << "Language before being added: " << argv[i+4] << endl;
 		all_LanguageTextFile.push_back(argv[i+4]);
-		//cout << "Language after being added: " << argv[i+4] << endl;
 	}
 
-	// Define a vectro to store all entropies from languages
+	// Define a vector to store all entropies from languages
 	vector<double> language_entropies;
-	// Define a vectro to store all entropies from textd analized
+	// Define a vector to store all entropies from textd analized
 	vector<double> analised_entropies;
 	// Vector to store the probabilities maps
 	vector<unordered_map <string, vector<double>>> prob_maps;
@@ -120,12 +118,14 @@ int main(int argc, char *argv[]){
 
 	}
 
+	// Separete the visualization
 	cout << endl;
 
 	// Create the FCM for the under analisys text to get the entropy based on the probabilities of the languages texts
 	fcm f_A(k, alpha, ToBeAnalizedTextFile, "file2.txt.out");
 	// Count the ocorrencies of each context / letter on the under analises text
 	f_A.count_occurrences();
+	f_A.print_occurrences();
 
 	for (int i = 0; i < n_Languages; i++){
 

@@ -90,8 +90,7 @@ void fcm::increment_counter(const char *new_char) {
 		vector <size_t> new_vector(ALPHABET_LENGTH);
 
 		fill(new_vector.begin(), new_vector.end(), 0);
-		table.insert(std::pair < std::string,
-		             std::vector < size_t >> (context.data(), new_vector));
+		table.insert(std::pair < std::string, std::vector < size_t >> (context.data(), new_vector));
 
 	}
 
@@ -260,10 +259,10 @@ void fcm::print_occurrences() {
 }
 
 //int main() {
-//	fcm f(5, 0.0001, "example.txt", "file1.txt.out");
+//	fcm f(3, 1, "mini_example_GER.txt", "file1.txt.out");
 //	f.count_occurrences();
 //	f.print_occurrences();
-//	f.calculate_probabilities();
+//	unordered_map <string, vector<double>> map_prob = f.calculate_probabilities();
 //	f.print_probabilities();
-//	f.calculate_entropy();
+//	double entro = f.calculate_entropy(map_prob);
 //};
