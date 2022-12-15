@@ -72,7 +72,7 @@ int main(int argc, char *argv[]){
     }
 
 	// Store the ToBeAnalizedTextFile
-	string ToBeAnalizedTextFile = argv[3];
+	char* ToBeAnalizedTextFile = argv[3];
 	// k argument
 	int k = atoi(argv[1]);
 	// alpha argument
@@ -80,7 +80,7 @@ int main(int argc, char *argv[]){
 
 	// Read the number of arguments
 	int n_Languages = argc - 4; // -4 because the path, k, alpha and ToBeAnalizedTextFile
-
+	//cout << "Number os languages(dictionaries): " << n_Languages << endl;
 	// Store the text files on a vector
 	vector<char*> all_LanguageTextFile;
 
@@ -88,34 +88,53 @@ int main(int argc, char *argv[]){
 	for (int i = 0; i < n_Languages; i++){
 
 		//Push the file into the vector
+		//cout << "Language before being added: " << argv[i+4] << endl;
 		all_LanguageTextFile.push_back(argv[i+4]);
+		//cout << "Language after being added: " << argv[i+4] << endl;
 	}
 
 	// Define a vectro to store all entropies from languages
 	vector<double> language_entropies;
 	// Define a vectro to store all entropies from textd analized
 	vector<double> analised_entropies;
-
+	// Vector to store the probabilities maps
+	vector<unordered_map <string, vector<double>>> prob_maps;
 
 	// Lets run throug all_LanguageTextFile and calculate the entropy
-	for (long unsigned int i = 0; i < all_LanguageTextFile.size(); i++){
+	for (int i = 0; i < n_Languages; i++){
 
 		// Create the FCM for the language texts so we can obtain the probability table
 		fcm f(k, alpha, all_LanguageTextFile[i], "file1.txt.out");
+		// Count the ocorrencies of each context / letter
 		f.count_occurrences();
-		//f.print_occurrences();
+		// Calculate the probabilities and store them in a map
 		unordered_map <string, vector<double>> map_prob = f.calculate_probabilities();
+		// Store the prob map
+		prob_maps.push_back(map_prob);
+		// Calculate the entropy of the language
 		double lang_entro = f.calculate_entropy(map_prob);
+		// Store the language entropy in a vector to future comparison
 		language_entropies.push_back(lang_entro);
+		// Print the entropy of the language
+		cout << "Text Language: " << all_LanguageTextFile[i] << ", Entropy: " << lang_entro << endl;
 
-		cout << "Text Language: " << all_LanguageTextFile[i] << ", Entropy: " << lang_entro;
+	}
 
-		// Create the FCM for the under analisys text to get the entropy based on the probabilities of the languages texts
-		fcm f_A(k, alpha, argv[3], "file1.txt.out");
-		double analised_entro = f_A.calculate_entropy(map_prob);
+	cout << endl;
+
+	// Create the FCM for the under analisys text to get the entropy based on the probabilities of the languages texts
+	fcm f_A(k, alpha, ToBeAnalizedTextFile, "file2.txt.out");
+	// Count the ocorrencies of each context / letter on the under analises text
+	f_A.count_occurrences();
+
+	for (int i = 0; i < n_Languages; i++){
+
+		// Calculate entropy based on the probabilities of the language
+		double analised_entro = f_A.calculate_entropy(prob_maps[i]);
+		// Store the under analies text entropy in a vector to future comparison
 		analised_entropies.push_back(analised_entro);
-
-		cout << "| Under Analisys Text Entropy: " << analised_entro << endl;
+		// Print the entropy of the under analisies text based on language probs
+		cout << "Under Analisys Text Entropy: " << analised_entro << ", with Language model " << all_LanguageTextFile[i] << endl;
 
 	}
 
