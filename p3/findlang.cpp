@@ -112,7 +112,7 @@ int main(int argc, char *argv[]){
 		// Store the prob map
 		prob_maps.push_back(map_prob);
 		// Calculate the entropy of the language
-		double lang_entro = f.calculate_entropy(map_prob);
+		double lang_entro = f.calculate_entropy();
 		// Store the language entropy in a vector to future comparison
 		language_entropies.push_back(lang_entro);
 		// Print the entropy of the language

@@ -1,8 +1,9 @@
 #include "fcm.h"
 
 int main() {
-  fcm fcm{1, 10, "test_file", "___"};
-  fcm.count_occurrences();
-  fcm.print_occurrences();
-  return 0;
-}
+	fcm f(2, 0.0001, "example_stupid.txt", "file1.txt.out");
+	f.count_occurrences();
+	f.print_occurrences();
+	f.calculate_probabilities();
+	f.calculate_entropy();
+};

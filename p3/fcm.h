@@ -16,7 +16,6 @@
 
 class fcm {
 private:
-	// TODO Create ALPHABET charset ¿
 	int k;
 	size_t chars_read = 0;
 	double smoothing_parameter;
@@ -72,6 +71,7 @@ public:
 	 * Calculate entropy
 	 */
 	double calculate_entropy(std::unordered_map <std::string, std::vector<double>> map);
+	double calculate_entropy(void);
 
 	/**
 	 * Count occurrences
