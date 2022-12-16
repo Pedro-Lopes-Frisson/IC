@@ -138,4 +138,22 @@ int main(int argc, char *argv[]){
 
 	}
 
+	// Chose the language wich has the higher entropy
+	// Variable to store the highest entropy
+	double highest_entropy = 0;
+	int index = 0;
+	for (int i = 0; i < n_Languages; i++){
+
+		if(analised_entropies[i] > highest_entropy){
+			// We store the highest value in the variable
+			highest_entropy = analised_entropies[i];
+			index = i;
+		}
+
+	}
+	cout << endl;
+	cout << "The language of the text under analise is the same as the language in " << all_LanguageTextFile[index] << endl;
+	cout << "The entropy obtained based on the probabiliti table of the " << all_LanguageTextFile[index] << "was " << highest_entropy 
+		 << "\nThe real entropy is " << language_entropies[index] << endl;
+
 };

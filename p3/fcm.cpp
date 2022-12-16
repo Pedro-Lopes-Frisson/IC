@@ -84,7 +84,7 @@ void fcm::add_to_context(char *new_char) {
 
 void fcm::increment_counter(const char *new_char) {
 	char ctx[k + 1];
-	int i;
+	int i = 0;
 	for (auto c: context) {
 		ctx[i] = c;
 		i++;
@@ -222,19 +222,19 @@ void fcm::count_occurrences() {
 	char c;
 	// read first char
 	c = tolower(file_in.get());
-	cout << "First: |" << c << "|" << endl;
+	//cout << "First: |" << c << "|" << endl;
 	chars_read++;
 
 	// fill buffer
 	while (i < this->k && c != EOF) {
 		if (isalpha(c) || c == ' ') {
 			add_to_context(&c);
-			cout << "Valid: |" << c << "|" << endl;
+			//cout << "Valid: |" << c << "|" << endl;
 			c = tolower(file_in.get());
 			chars_read++;
 			i++;
 		} else {
-			cout << "2 Not Valid: |" << c << "|" << endl;
+			//cout << "2 Not Valid: |" << c << "|" << endl;
 			c = tolower(file_in.get());
 		}
 	}
@@ -242,7 +242,7 @@ void fcm::count_occurrences() {
 	// Count and add to context
 	while (c != EOF) {
 		if (!isalpha(c) && c != ' ') {
-			cout << "3 Not Valid: |" << c << "|" << endl;
+			//cout << "3 Not Valid: |" << c << "|" << endl;
 			c = tolower(file_in.get());
 			continue;
 		}
@@ -250,7 +250,7 @@ void fcm::count_occurrences() {
 		increment_counter(&c);
 		add_to_context(&c);
 		c = tolower(file_in.get());
-		cout << "|" << c << "|" << endl;
+		//cout << "|" << c << "|" << endl;
 	}
 
 	// discount EOF
