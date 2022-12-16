@@ -83,22 +83,35 @@ void fcm::add_to_context(char *new_char) {
 }
 
 void fcm::increment_counter(const char *new_char) {
+	char ctx[k + 1];
+	int i;
+	for (auto c: context) {
+		ctx[i] = c;
+		i++;
+	}
+	ctx[k] = '\0';
+	string string_ctx(ctx);
 	// check if context exists
-	if (table.find(context.data()) == table.end()) {
+	if (table.find(string_ctx) == table.end()) {
 		// context does not exist create it
 		// create vector
 		vector <size_t> new_vector(ALPHABET_LENGTH);
 
 		fill(new_vector.begin(), new_vector.end(), 0);
+<<<<<<< HEAD
 		table.insert(std::pair < std::string, std::vector < size_t >> (context.data(), new_vector));
+=======
+		table.insert(std::pair < std::string,
+		             std::vector < size_t >> (string_ctx, new_vector));
+>>>>>>> 4e5e9ebe71f0c3af4cc3f9a294a9dea9dec6ce6e
 
 	}
 
 	// increment counter at this point is safe just to increment it
 	if (*new_char != ' ')
-		table[context.data()][(size_t)(*new_char) - ALPHABET_START]++;
+		table[string_ctx][(size_t)(*new_char) - ALPHABET_START]++;
 	else
-		table[context.data()][ALPHABET_LENGTH - 1]++; // space
+		table[string_ctx][ALPHABET_LENGTH - 1]++; // space
 	return;
 }
 
@@ -184,26 +197,56 @@ double fcm::calculate_entropy(unordered_map <string, vector<double>> map) {
 	return model_entropy;
 }
 
+double fcm::calculate_entropy() {
+	// TODO: FIX THIS
+	model_entropy = 0;
+	double ctx_entropy = 0;
+	double prob;
+	double cum_sum = 0;
+
+	for (auto &entry: table_probabilities) {
+		ctx_entropy = 0;
+		for (size_t i = 0; i < entry.second.size(); i++) {
+			// if count was zero then don't use it to calculate the entropy
+			if (table.find(entry.first)->second[i] == 0) continue;
+			prob = entry.second[i];
+
+			ctx_entropy += -(prob * log2(prob));
+		}
+		cum_sum = accumulate(table[entry.first].begin(), table[entry.first].end(), 0);
+		model_entropy += (cum_sum / chars_read) * ctx_entropy;
+	}
+	//cout << "Entropy: " << model_entropy << endl;
+
+	return model_entropy;
+}
+
 void fcm::count_occurrences() {
 	int i = 0;
 	char c;
 	// read first char
 	c = tolower(file_in.get());
+	cout << "First: |" << c << "|" << endl;
 	chars_read++;
 
 	// fill buffer
 	while (i < this->k && c != EOF) {
 		if (isalpha(c) || c == ' ') {
 			add_to_context(&c);
+			cout << "Valid: |" << c << "|" << endl;
 			c = tolower(file_in.get());
 			chars_read++;
 			i++;
+		} else {
+			cout << "2 Not Valid: |" << c << "|" << endl;
+			c = tolower(file_in.get());
 		}
 	}
 
 	// Count and add to context
 	while (c != EOF) {
 		if (!isalpha(c) && c != ' ') {
+			cout << "3 Not Valid: |" << c << "|" << endl;
 			c = tolower(file_in.get());
 			continue;
 		}
@@ -211,6 +254,7 @@ void fcm::count_occurrences() {
 		increment_counter(&c);
 		add_to_context(&c);
 		c = tolower(file_in.get());
+		cout << "|" << c << "|" << endl;
 	}
 
 	// discount EOF
