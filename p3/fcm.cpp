@@ -298,8 +298,9 @@ void fcm::print_occurrences() {
 	cout << endl;
 }
 
-double fcm::get_prob(auto ctx, char next_char){
+double fcm::get_prob(vector<char> ctx, char next_char){
 
+	return table_probabilities[ctx.data()][next_char];
 }
 
 double fcm::calculate_nBits(){
