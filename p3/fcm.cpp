@@ -18,6 +18,7 @@ fcm::fcm(int order, double smooth_parameter, const char *fIn
 	open_file(fIn, 0);
 	open_file(fOut, 1);
 	vector <string> contexts;
+
 	fcm::possible_contexts(contexts, order, "");
 	for (auto ctx: contexts) {
 		table.insert(pair < string,
@@ -125,13 +126,18 @@ void fcm::calculate_probabilities() {
 					>> (entry.first, new_vector));
 		}
 
+		double pb, paeb;
 		// for each value inside vector calculate probability
 		size_t cnt;
 		for (size_t i = 0; i < entry.second.size(); i++) {
 			cnt = entry.second[i];
-			table_probabilities[entry.first][i] =
-					(cnt + smoothing_parameter) /
-					(cumulative_sum + (ALPHABET_LENGTH * smoothing_parameter));
+			pb = cumulative_sum / chars_read;
+			paeb = (cnt + smoothing_parameter) /
+			       (cumulative_sum + (ALPHABET_LENGTH * smoothing_parameter));
+
+			table_probabilities[entry.first][i] = (cnt + smoothing_parameter)
+			                                      / (cumulative_sum +
+			                                         (ALPHABET_LENGTH * smoothing_parameter));
 		}
 
 	}
@@ -156,17 +162,23 @@ void fcm::calculate_probabilities() {
 void fcm::calculate_entropy() {
 	// TODO: FIX THIS
 	model_entropy = 0;
+	double ctx_entropy = 0;
 	double prob;
+	double cum_sum = 0;
+
 	for (auto &entry: table_probabilities) {
+		ctx_entropy = 0;
 		for (size_t i = 0; i < entry.second.size(); i++) {
 			// if count was zero then don't use it to calculate the entropy
-			if (table.find(entry.first)->second[i] == (double) 0.0) continue;
+			if (table.find(entry.first)->second[i] == 0) continue;
 			prob = entry.second[i];
 
-			model_entropy += -(prob * log2(prob));
+			ctx_entropy += -(prob * log2(prob));
 		}
+		cum_sum = accumulate(table[entry.first].begin(), table[entry.first].end(), 0);
+		model_entropy += (cum_sum / chars_read) * ctx_entropy;
 	}
-	cout << model_entropy << endl;
+	cout << "Entropy: " << model_entropy << endl;
 }
 
 void fcm::count_occurrences() {
@@ -174,12 +186,14 @@ void fcm::count_occurrences() {
 	char c;
 	// read first char
 	c = tolower(file_in.get());
+	chars_read++;
 
 	// fill buffer
 	while (i < this->k && c != EOF) {
 		if (isalpha(c) || c == ' ') {
 			add_to_context(&c);
 			c = tolower(file_in.get());
+			chars_read++;
 			i++;
 		}
 	}
@@ -190,29 +204,33 @@ void fcm::count_occurrences() {
 			c = tolower(file_in.get());
 			continue;
 		}
+		chars_read++;
 		increment_counter(&c);
 		add_to_context(&c);
 		c = tolower(file_in.get());
 	}
 
+	// discount EOF
+	chars_read--;
 }
 
 
 void fcm::print_probabilities() {
 	cout << "TABLE OF PROBABILITIES" << endl;
-	cout << "Context/Symbol | ";
+	cout << "| Context/Symbol | ";
 	for (size_t i = 0; i < ALPHABET_LENGTH; i++) {
 		if (i == ALPHABET_LENGTH - 1)
-			cout << "<SPACE>  |";
+			cout << "<SPACE>|";
 		else
 			cout << (char) (ALPHABET_START + i) << "  |";
 	}
 	cout << endl;
 
 	for (auto &entry: table_probabilities) {
-		cout << entry.first << "           |";
+		cout << "| " << entry.first << "           |";
 		for (auto prob: entry.second)
 			cout << " " << prob << " |";
+		cout << endl;
 	}
 	cout << endl;
 }
@@ -238,10 +256,10 @@ void fcm::print_occurrences() {
 }
 
 int main() {
-	fcm f(1, 0, "example.txt", "file1.txt.out");
+	fcm f(5, 0.0001, "example.txt", "file1.txt.out");
 	f.count_occurrences();
 	f.print_occurrences();
 	f.calculate_probabilities();
-	f.calculate_entropy();
 	f.print_probabilities();
+	f.calculate_entropy();
 };
