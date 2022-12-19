@@ -1,4 +1,5 @@
 #include "fcm.h"
+#include <algorithm>
 #include <vector>
 #include <string>
 #include <iostream>
@@ -96,7 +97,7 @@ int main(int argc, char *argv[]){
 	// Define a vectro to store all entropies from languages
 	vector<double> language_entropies;
 	// Define a vectro to store all entropies from textd analized
-	vector<double> analised_entropies;
+	vector<size_t> analised_nBits_needed;
 	// Vector to store the probabilities maps
 	vector<unordered_map <string, vector<double>>> prob_maps;
 
@@ -130,30 +131,28 @@ int main(int argc, char *argv[]){
 	for (int i = 0; i < n_Languages; i++){
 
 		// Calculate entropy based on the probabilities of the language
-		double analised_entro = f_A.calculate_entropy(prob_maps[i]);
+		double nbits = f_A.calculate_nBits(all_LanguageTextFile[i],prob_maps[i]);
 		// Store the under analies text entropy in a vector to future comparison
-		analised_entropies.push_back(analised_entro);
+		analised_nBits_needed.push_back(nbits);
 		// Print the entropy of the under analisies text based on language probs
-		cout << "Under Analisys Text Entropy: " << analised_entro << ", with Language model " << all_LanguageTextFile[i] << endl;
+		cout << "Under Analisys Text Entropy: " << nbits << ", with Language model " << all_LanguageTextFile[i] << endl;
 
 	}
-
 	// Chose the language wich has the higher entropy
 	// Variable to store the highest entropy
 	double highest_entropy = 0;
 	int index = 0;
 	for (int i = 0; i < n_Languages; i++){
 
-		if(analised_entropies[i] > highest_entropy){
+		if(analised_nBits_needed[i] < highest_entropy){
 			// We store the highest value in the variable
-			highest_entropy = analised_entropies[i];
+			highest_entropy = analised_nBits_needed[i];
 			index = i;
 		}
 
 	}
 	cout << endl;
 	cout << "The language of the text under analise is the same as the language in " << all_LanguageTextFile[index] << endl;
-	cout << "The entropy obtained based on the probabiliti table of the " << all_LanguageTextFile[index] << "was " << highest_entropy 
-		 << "\nThe real entropy is " << language_entropies[index] << endl;
+	cout << "The Number of bits needed to encode the text " << all_LanguageTextFile[index] << " was " << highest_entropy ;
 
 };
