@@ -298,6 +298,19 @@ void fcm::print_occurrences() {
 	cout << endl;
 }
 
+double fcm::get_prob(auto ctx, char next_char){
+
+}
+
+double fcm::calculate_nBits(){
+
+	// Read context
+	for (auto &entry: table_probabilities){
+
+	}
+
+}
+
 //int main() {
 //	fcm f(5, 0.0001, "example.txt", "file1.txt.out");
 //	f.count_occurrences();
