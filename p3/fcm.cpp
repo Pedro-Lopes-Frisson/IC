@@ -4,6 +4,7 @@
 
 #include "fcm.h"
 // cumulative sum
+#include <cmath>
 #include <cstddef>
 #include <ios>
 #include <numeric>
@@ -141,7 +142,7 @@ unordered_map <string, vector<double>> fcm::calculate_probabilities() {
 		size_t cnt;
 		for (size_t i = 0; i < entry.second.size(); i++) {
 			cnt = entry.second[i];
-			pb = cumulative_sum / chars_read;
+			pb = cumulative_sum / (double) chars_read;
 			paeb = (cnt + smoothing_parameter) /
 			       (cumulative_sum + (ALPHABET_LENGTH * smoothing_parameter));
 
@@ -309,9 +310,11 @@ double fcm::get_prob(char next_char){
 	}
 	ctx[k] = '\0';
 	string string_ctx(ctx);
-	cout << "|" << ctx << "|" << endl;
+	for(size_t i = 0; i < ALPHABET_LENGTH; i++)
 	// check if context exists
-	return table_probabilities[ctx][next_char];
+	if(next_char == ' ')
+		return table_probabilities[ctx][ALPHABET_LENGTH - 1];
+	return table_probabilities[ctx][ (size_t)next_char - ALPHABET_START];
 }
 
 double fcm::get_prob(char next_char,unordered_map <string, vector<double>> map ){
@@ -323,14 +326,17 @@ double fcm::get_prob(char next_char,unordered_map <string, vector<double>> map )
 	}
 	ctx[k] = '\0';
 	string string_ctx(ctx);
-	cout << "|" << ctx << "|" << endl;
 	// check if context exists
-	return map[ctx][next_char];
+	if(next_char == ' ')
+		return map[ctx][ALPHABET_LENGTH - 1];
+	return map[ctx][ (size_t)next_char - ALPHABET_START];
 }
 
 double fcm::calculate_nBits(char * fToClassify,unordered_map <string, vector<double>> map  ){
-	ifstream fIn {fToClassify, ios_base::in};
-		
+	// GoTo begin of file
+	file_in.clear();
+	file_in.seekg(0);
+
 	int i = 0;
 	char c;
 	// read first char
@@ -354,6 +360,7 @@ double fcm::calculate_nBits(char * fToClassify,unordered_map <string, vector<dou
 		}
 	}
 
+	double prob;
 	// Count and add to context
 	while (c != EOF) {
 		if (!isalpha(c) && c != ' ') {
@@ -362,12 +369,14 @@ double fcm::calculate_nBits(char * fToClassify,unordered_map <string, vector<dou
 			continue;
 		}
 		chars_read++;
-		num_Bits += ceil(-log2(get_prob(c)));
+		prob = get_prob(c, map);
+
+		num_Bits += ceil(-log2(get_prob(c, map)));
 		add_to_context(&c);
 		c = tolower(file_in.get());
 		//cout << "|" << c << "|" << endl;
 	}
-	cout << num_Bits;
+	cout << "Num Bits: " << num_Bits << endl;
 	// discount EOF
 	chars_read--;
 	return num_Bits;
@@ -375,11 +384,10 @@ double fcm::calculate_nBits(char * fToClassify,unordered_map <string, vector<dou
 
 double fcm::calculate_nBits(char * fToClassify){
 	ifstream fIn {fToClassify, ios_base::in};
-		
 	int i = 0;
 	char c;
 	// read first char
-	c = tolower(file_in.get());
+	c = tolower(fIn.get());
 	//cout << "First: |" << c << "|" << endl;
 	chars_read++;
 	size_t num_Bits = 0;
@@ -390,12 +398,12 @@ double fcm::calculate_nBits(char * fToClassify){
 		if (isalpha(c) || c == ' ') {
 			add_to_context(&c);
 			//cout << "Valid: |" << c << "|" << endl;
-			c = tolower(file_in.get());
+			c = tolower(fIn.get());
 			chars_read++;
 			i++;
 		} else {
 			//cout << "2 Not Valid: |" << c << "|" << endl;
-			c = tolower(file_in.get());
+			c = tolower(fIn.get());
 		}
 	}
 
@@ -403,13 +411,13 @@ double fcm::calculate_nBits(char * fToClassify){
 	while (c != EOF) {
 		if (!isalpha(c) && c != ' ') {
 			//cout << "3 Not Valid: |" << c << "|" << endl;
-			c = tolower(file_in.get());
+			c = tolower(fIn.get());
 			continue;
 		}
 		chars_read++;
 		num_Bits += ceil(-log2(get_prob(c)));
 		add_to_context(&c);
-		c = tolower(file_in.get());
+		c = tolower(fIn.get());
 		//cout << "|" << c << "|" << endl;
 	}
 	cout << num_Bits;
