@@ -21,3 +21,6 @@ target_link_libraries( findlang fcm )
 
 add_executable( lang lang.cpp )
 target_link_libraries( lang fcm )
+
+add_executable( locatelang locatelang.cpp )
+target_link_libraries( locatelang fcm )
