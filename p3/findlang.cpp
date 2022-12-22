@@ -81,7 +81,6 @@ int main(int argc, char *argv[]){
 
 	// Read the number of arguments
 	int n_Languages = argc - 4; // -4 because the path, k, alpha and ToBeAnalizedTextFile
-	//cout << "Number os languages(dictionaries): " << n_Languages << endl;
 	// Store the text files on a vector
 	vector<char*> all_LanguageTextFile;
 
@@ -89,9 +88,7 @@ int main(int argc, char *argv[]){
 	for (int i = 0; i < n_Languages; i++){
 
 		//Push the file into the vector
-		//cout << "Language before being added: " << argv[i+4] << endl;
 		all_LanguageTextFile.push_back(argv[i+4]);
-		//cout << "Language after being added: " << argv[i+4] << endl;
 	}
 
 	// Define a vectro to store all entropies from languages
@@ -109,58 +106,55 @@ int main(int argc, char *argv[]){
 		// Count the ocorrencies of each context / letter
 		f.count_occurrences();
 		// Calculate the probabilities and store them in a map
-		//
 		unordered_map <string, vector<double>> map_prob = f.calculate_probabilities();
+		// Calculate Number of bits
 		_bits = f.calculate_nBits(ToBeAnalizedTextFile);
-		analised_nBits_needed.push_back(_bits);
-
-		cout << endl << "Num Bits: "  << _bits << endl;
+		// Store the number of bits
+		//analised_nBits_needed.push_back(_bits);
 		// Store the prob map
 		prob_maps.push_back(map_prob);
 		// Calculate the entropy of the language
 		double lang_entro = f.calculate_entropy();
 		// Store the language entropy in a vector to future comparison
 		language_entropies.push_back(lang_entro);
-		// Print the entropy of the language
-		//cout << "Text Language: " << all_LanguageTextFile[i] << ", Entropy: " << lang_entro << endl;
-
-		//f.print_probabilities();
+		// Print Info
+		//cout << "Number of bits to write the ToBeAnalizedTextFile using the "  << all_LanguageTextFile[i] << ": " << _bits << endl;
 
 	}
 
 	cout << endl;
 
 	// Create the FCM for the under analisys text to get the entropy based on the probabilities of the languages texts
-	//fcm f_A(k, alpha, ToBeAnalizedTextFile, "file2.txt.out");
-	//// Count the ocorrencies of each context / letter on the under analises text
-	////f_A.count_occurrences();
+	fcm f_A(k, alpha, ToBeAnalizedTextFile, "file2.txt.out");
+	// Count the ocorrencies of each context / letter on the under analises text
+	f_A.count_occurrences();
 	//
-	//for (int i = 0; i < n_Languages; i++){
-	//
-	//	// Calculate entropy based on the probabilities of the language
-	//	double nbits = f_A.calculate_nBits(ToBeAnalizedTextFile ,prob_maps[i]);
-	//	// Store the under analies text entropy in a vector to future comparison
-	//	analised_nBits_needed.push_back(nbits);
-	//	// Print the entropy of the under analisies text based on language probs
-	//	cout << "Bits needed " << nbits << ", with Language model " << all_LanguageTextFile[i] << endl;
-	//
-	//}
+	for (int i = 0; i < n_Languages; i++){
+	
+		// Calculate entropy based on the probabilities of the language
+		double nbits = f_A.calculate_nBits(ToBeAnalizedTextFile ,prob_maps[i]);
+		// Store the under analies text entropy in a vector to future comparison
+		analised_nBits_needed.push_back(nbits);
+		// Print the entropy of the under analisies text based on language probs
+		cout << "Bits needed " << nbits << ", with Language model " << all_LanguageTextFile[i] << endl;
+	
+	}
 	// Chose the language wich has the higher entropy
 	// Variable to store the highest entropy
 	//
-	double highest_entropy = analised_nBits_needed[0];
+	double lowest_nBits = analised_nBits_needed[0];
 	int index = 0;
 	for (int i = 0; i < n_Languages; i++){
 
-		if(analised_nBits_needed[i] < highest_entropy){
+		if(analised_nBits_needed[i] < lowest_nBits){
 			// We store the highest value in the variable
-			highest_entropy = analised_nBits_needed[i];
+			lowest_nBits = analised_nBits_needed[i];
 			index = i;
 		}
 
 	}
 	cout << endl;
 	cout << "The language of the text under analise is the same as the language in " << all_LanguageTextFile[index] << endl;
-	cout << "The Number of bits needed to encode the text " << all_LanguageTextFile[index] << " was " << highest_entropy ;
+	cout << "The Number of bits needed to encode the text " << all_LanguageTextFile[index] << " was " << lowest_nBits << endl;
 
 };

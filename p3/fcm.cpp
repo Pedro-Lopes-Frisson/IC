@@ -376,7 +376,7 @@ double fcm::calculate_nBits(char * fToClassify,unordered_map <string, vector<dou
 		c = tolower(file_in.get());
 		//cout << "|" << c << "|" << endl;
 	}
-	cout << "Num Bits: " << num_Bits << endl;
+	//cout << "Num Bits: " << num_Bits << endl;
 	// discount EOF
 	chars_read--;
 	return num_Bits;
@@ -420,7 +420,6 @@ double fcm::calculate_nBits(char * fToClassify){
 		c = tolower(fIn.get());
 		//cout << "|" << c << "|" << endl;
 	}
-	cout << num_Bits;
 	// discount EOF
 	chars_read--;
 	return num_Bits;
