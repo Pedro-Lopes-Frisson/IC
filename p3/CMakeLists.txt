@@ -18,3 +18,6 @@ target_link_libraries( fcm_test fcm )
 
 add_executable( findlang findlang.cpp )
 target_link_libraries( findlang fcm )
+
+add_executable( lang lang.cpp )
+target_link_libraries( lang fcm )

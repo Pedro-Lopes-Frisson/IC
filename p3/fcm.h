@@ -98,10 +98,11 @@ public:
 
 	void possible_contexts(std::vector <std::string> &contexts, int order, std::string prefix);
 
-	double get_prob(char next_char);
+	//double get_prob(char next_char);
 	double get_prob(char next_char,std::unordered_map <std::string, std::vector<double>> map);
-	double calculate_nBits(char *fToClassify,std::unordered_map <std::string, std::vector<double>> map);
-	double calculate_nBits(char *fToClassify);
+	//double calculate_nBits(char *fToClassify,std::unordered_map <std::string, std::vector<double>> map);
+	double calculate_nBits(std::unordered_map <std::string, std::vector<double>> map);
+	//double calculate_nBits(char *fToClassify);
 };
 
 

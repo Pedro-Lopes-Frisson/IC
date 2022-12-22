@@ -97,7 +97,7 @@ int main(int argc, char *argv[]){
 	vector<size_t> analised_nBits_needed;
 	// Vector to store the probabilities maps
 	vector<unordered_map <string, vector<double>>> prob_maps;
-	double _bits = 0;
+	//double _bits = 0;
 	// Lets run throug all_LanguageTextFile and calculate the entropy
 	for (int i = 0; i < n_Languages; i++){
 
@@ -108,21 +108,22 @@ int main(int argc, char *argv[]){
 		// Calculate the probabilities and store them in a map
 		unordered_map <string, vector<double>> map_prob = f.calculate_probabilities();
 		// Calculate Number of bits
-		_bits = f.calculate_nBits(ToBeAnalizedTextFile);
+		//_bits = f.calculate_nBits(ToBeAnalizedTextFile);
+		//_bits = f.calculate_nBits(map_prob);
 		// Store the number of bits
 		//analised_nBits_needed.push_back(_bits);
 		// Store the prob map
 		prob_maps.push_back(map_prob);
 		// Calculate the entropy of the language
-		double lang_entro = f.calculate_entropy();
+		//double lang_entro = f.calculate_entropy();
 		// Store the language entropy in a vector to future comparison
-		language_entropies.push_back(lang_entro);
+		//language_entropies.push_back(lang_entro);
 		// Print Info
 		//cout << "Number of bits to write the ToBeAnalizedTextFile using the "  << all_LanguageTextFile[i] << ": " << _bits << endl;
 
 	}
 
-	cout << endl;
+	//cout << endl;
 
 	// Create the FCM for the under analisys text to get the entropy based on the probabilities of the languages texts
 	fcm f_A(k, alpha, ToBeAnalizedTextFile, "file2.txt.out");
@@ -132,11 +133,12 @@ int main(int argc, char *argv[]){
 	for (int i = 0; i < n_Languages; i++){
 	
 		// Calculate entropy based on the probabilities of the language
-		double nbits = f_A.calculate_nBits(ToBeAnalizedTextFile ,prob_maps[i]);
+		//double nbits = f_A.calculate_nBits(ToBeAnalizedTextFile ,prob_maps[i]);
+		double nbits = f_A.calculate_nBits(prob_maps[i]);
 		// Store the under analies text entropy in a vector to future comparison
 		analised_nBits_needed.push_back(nbits);
 		// Print the entropy of the under analisies text based on language probs
-		cout << "Bits needed " << nbits << ", with Language model " << all_LanguageTextFile[i] << endl;
+		cout << "Bits needed to encode the ToBeAnalizedTextFile " << nbits << ", with Language model " << all_LanguageTextFile[i] << endl;
 	
 	}
 	// Chose the language wich has the higher entropy
@@ -154,7 +156,7 @@ int main(int argc, char *argv[]){
 
 	}
 	cout << endl;
-	cout << "The language of the text under analise is the same as the language in " << all_LanguageTextFile[index] << endl;
-	cout << "The Number of bits needed to encode the text " << all_LanguageTextFile[index] << " was " << lowest_nBits << endl;
+	cout << "The language of the text under analise has the same language of the " << all_LanguageTextFile[index] << endl;
+	cout << "The Number of bits needed to encode the text based on that model is " << lowest_nBits << endl;
 
 };
