@@ -220,6 +220,32 @@ double fcm::calculate_entropy() {
 	return model_entropy;
 }
 
+vector<double> fcm::calculate_inst_entropy(unordered_map <string, vector<double>> map){
+
+	vector<double> model_inst_entropy;
+	double prob;
+	double ctx_entropy;
+	double cum_sum;
+
+	for (auto &entry: map) {
+		ctx_entropy = 0;
+		for (size_t i = 0; i < entry.second.size(); i++) {
+			// if count was zero then don't use it to calculate the entropy
+			if (table.find(entry.first)->second[i] == 0) continue;
+			prob = entry.second[i];
+
+			ctx_entropy += -(prob * log2(prob));
+		}
+		cum_sum = accumulate(table[entry.first].begin(), table[entry.first].end(), 0);
+		model_entropy = cum_sum * ctx_entropy;
+		model_inst_entropy.push_back(model_entropy);
+		cum_sum = 0;
+		model_entropy = 0;
+
+	}
+	return model_inst_entropy;
+}
+
 void fcm::count_occurrences() {
 	int i = 0;
 	char c;

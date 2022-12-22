@@ -73,6 +73,8 @@ public:
 	double calculate_entropy(std::unordered_map <std::string, std::vector<double>> map);
 	double calculate_entropy(void);
 
+	std::vector<double> calculate_inst_entropy(std::unordered_map <std::string, std::vector<double>> map);
+
 	/**
 	 * Count occurrences
 	 */
