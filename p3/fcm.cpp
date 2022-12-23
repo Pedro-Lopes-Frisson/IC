@@ -327,21 +327,21 @@ void fcm::print_occurrences() {
 	cout << endl;
 }
 
-//double fcm::get_prob(char next_char){
-//	char ctx[k + 1];
-//	int i = 0;
-//	for (auto c: context) {
-//		ctx[i] = c;
-//		i++;
-//	}
-//	ctx[k] = '\0';
-//	string string_ctx(ctx);
-//	for(size_t i = 0; i < ALPHABET_LENGTH; i++)
+double fcm::get_prob(char next_char){
+	char ctx[k + 1];
+	int i = 0;
+	for (auto c: context) {
+		ctx[i] = c;
+		i++;
+	}
+	ctx[k] = '\0';
+	string string_ctx(ctx);
+	for(size_t i = 0; i < ALPHABET_LENGTH; i++)
 	// check if context exists
-//	if(next_char == ' ')
-//		return table_probabilities[ctx][ALPHABET_LENGTH - 1];
-//	return table_probabilities[ctx][ (size_t)next_char - ALPHABET_START];
-//}
+	if(next_char == ' ')
+		return table_probabilities[ctx][ALPHABET_LENGTH - 1];
+	return table_probabilities[ctx][ (size_t)next_char - ALPHABET_START];
+}
 
 double fcm::get_prob(char next_char,unordered_map <string, vector<double>> map ){
 	char ctx[k + 1];
@@ -410,48 +410,48 @@ double fcm::calculate_nBits(unordered_map <string, vector<double>> map  ){
 	return num_Bits;
 }
 
-//double fcm::calculate_nBits(char * fToClassify){
-//	ifstream fIn {fToClassify, ios_base::in};
-//	int i = 0;
-//	char c;
+double fcm::calculate_nBits(char * fToClassify){
+	ifstream fIn {fToClassify, ios_base::in};
+	int i = 0;
+	char c;
 	// read first char
-//	c = tolower(fIn.get());
+	c = tolower(fIn.get());
 	//cout << "First: |" << c << "|" << endl;
-//	chars_read++;
-//	size_t num_Bits = 0;
+	chars_read++;
+	size_t num_Bits = 0;
 
 
 	// fill buffer (context)
-//	while (i < this->k && c != EOF) {
-//		if (isalpha(c) || c == ' ') {
-//			add_to_context(&c);
+	while (i < this->k && c != EOF) {
+		if (isalpha(c) || c == ' ') {
+			add_to_context(&c);
 			//cout << "Valid: |" << c << "|" << endl;
-//			c = tolower(fIn.get());
-//			chars_read++;
-//			i++;
-//		} else {
+			c = tolower(fIn.get());
+			chars_read++;
+			i++;
+		} else {
 			//cout << "2 Not Valid: |" << c << "|" << endl;
-//			c = tolower(fIn.get());
-//		}
-//	}
+			c = tolower(fIn.get());
+		}
+	}
 
 	// Count and add to context
-//	while (c != EOF) {
-//		if (!isalpha(c) && c != ' ') {
+	while (c != EOF) {
+		if (!isalpha(c) && c != ' ') {
 			//cout << "3 Not Valid: |" << c << "|" << endl;
-//			c = tolower(fIn.get());
-//			continue;
-//		}
-//		chars_read++;
-//		num_Bits += ceil(-log2(get_prob(c)));
-//		add_to_context(&c);
-//		c = tolower(fIn.get());
+			c = tolower(fIn.get());
+			continue;
+		}
+		chars_read++;
+		num_Bits += ceil(-log2(get_prob(c)));
+		add_to_context(&c);
+		c = tolower(fIn.get());
 		//cout << "|" << c << "|" << endl;
-//	}
+	}
 	// discount EOF
-//	chars_read--;
-//	return num_Bits;
-//}
+	chars_read--;
+	return num_Bits;
+}
 
 //int main() {
 //	fcm f(5, 0.0001, "example.txt", "file1.txt.out");

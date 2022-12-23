@@ -84,23 +84,8 @@ int main(int argc, char *argv[]){
 	f.count_occurrences();
 	// Calculate the probabilities and store them in a map
 	unordered_map <string, vector<double>> map_prob = f.calculate_probabilities();
-	// Calculate the entropy of the language
-	//double lang_entro = f.calculate_entropy();
-	// Print the entropy of the language
-	//cout << "Text Language: " << LanguageTextFile << ", Entropy: " << lang_entro << endl;
-
-	//cout << endl;
-
-	// Create the FCM for the under analisys text to get the entropy based on the probabilities of the languages texts
-	fcm f_A(k, alpha, ToBeAnalizedTextFile, "file2.txt.out");
-	// Count the ocorrencies of each context / letter on the under analises text
-	f_A.count_occurrences();
-	// Calculate entropy based on the probabilities of the language
-	double analised_entro = f_A.calculate_entropy(map_prob);
-    // Calculate entropy based on the probabilities of the language
-    //double nbits = f_A.calculate_nBits(ToBeAnalizedTextFile ,map_prob);
-    double nbits = f_A.calculate_nBits(map_prob);
-	// Print the entropy of the under analisies text based on language probs
-	cout << "Under Analisys Text number of bits to encode based on this language model " << LanguageTextFile << ": " << nbits << endl;
-
+    // Calculate Number of bits
+    double nbits= f.calculate_nBits(ToBeAnalizedTextFile);
+    // Print the entropy of the under analisies text based on language probs
+    cout << "Using the " << LanguageTextFile << " model, the under analise text would need " << nbits << " bits to be writen."<< endl;
 };

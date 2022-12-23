@@ -91,13 +91,10 @@ int main(int argc, char *argv[]){
 		all_LanguageTextFile.push_back(argv[i+4]);
 	}
 
-	// Define a vectro to store all entropies from languages
-	vector<double> language_entropies;
-	// Define a vectro to store all entropies from textd analized
+	// Define a vectro to store all number of bits from text analized
 	vector<size_t> analised_nBits_needed;
-	// Vector to store the probabilities maps
-	vector<unordered_map <string, vector<double>>> prob_maps;
-	//double _bits = 0;
+	// Variable to store the number of bits
+	double _bits = 0;
 	// Lets run throug all_LanguageTextFile and calculate the entropy
 	for (int i = 0; i < n_Languages; i++){
 
@@ -108,48 +105,22 @@ int main(int argc, char *argv[]){
 		// Calculate the probabilities and store them in a map
 		unordered_map <string, vector<double>> map_prob = f.calculate_probabilities();
 		// Calculate Number of bits
-		//_bits = f.calculate_nBits(ToBeAnalizedTextFile);
-		//_bits = f.calculate_nBits(map_prob);
+		_bits = f.calculate_nBits(ToBeAnalizedTextFile);
 		// Store the number of bits
-		//analised_nBits_needed.push_back(_bits);
-		// Store the prob map
-		prob_maps.push_back(map_prob);
-		// Calculate the entropy of the language
-		//double lang_entro = f.calculate_entropy();
-		// Store the language entropy in a vector to future comparison
-		//language_entropies.push_back(lang_entro);
+		analised_nBits_needed.push_back(_bits);
 		// Print Info
-		//cout << "Number of bits to write the ToBeAnalizedTextFile using the "  << all_LanguageTextFile[i] << ": " << _bits << endl;
+		cout << "Number of bits to write the ToBeAnalizedTextFile using the "  << all_LanguageTextFile[i] << " model: " << _bits << endl;
 
 	}
 
-	//cout << endl;
+	cout << endl;
 
-	// Create the FCM for the under analisys text to get the entropy based on the probabilities of the languages texts
-	fcm f_A(k, alpha, ToBeAnalizedTextFile, "file2.txt.out");
-	// Count the ocorrencies of each context / letter on the under analises text
-	f_A.count_occurrences();
-	//
-	for (int i = 0; i < n_Languages; i++){
-	
-		// Calculate entropy based on the probabilities of the language
-		//double nbits = f_A.calculate_nBits(ToBeAnalizedTextFile ,prob_maps[i]);
-		double nbits = f_A.calculate_nBits(prob_maps[i]);
-		// Store the under analies text entropy in a vector to future comparison
-		analised_nBits_needed.push_back(nbits);
-		// Print the entropy of the under analisies text based on language probs
-		cout << "Bits needed to encode the ToBeAnalizedTextFile " << nbits << ", with Language model " << all_LanguageTextFile[i] << endl;
-	
-	}
-	// Chose the language wich has the higher entropy
-	// Variable to store the highest entropy
-	//
 	double lowest_nBits = analised_nBits_needed[0];
 	int index = 0;
 	for (int i = 0; i < n_Languages; i++){
 
 		if(analised_nBits_needed[i] < lowest_nBits){
-			// We store the highest value in the variable
+			// We store the lowest value in the variable
 			lowest_nBits = analised_nBits_needed[i];
 			index = i;
 		}
