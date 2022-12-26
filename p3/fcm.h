@@ -5,6 +5,7 @@
 #ifndef P3_FCM_H
 #define P3_FCM_H
 
+#include <cstddef>
 #include <ostream>
 #include <unordered_map>
 #include <map>
@@ -12,7 +13,13 @@
 #include <string>
 #include <fstream>
 #include <cmath>
-
+#include <map>
+#include <sstream>
+#include <boost/serialization/map.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/map.hpp>
+#include <boost/archive/text_oarchive.hpp>
 
 class fcm {
 private:
@@ -23,8 +30,8 @@ private:
 	const static size_t ALPHABET_LENGTH = 27;
 	const static size_t ALPHABET_START = 'a';
 
-	std::unordered_map <std::string, std::vector<size_t>> table;
-	std::unordered_map <std::string, std::vector<double>> table_probabilities;
+	std::map <std::size_t, std::vector<size_t>> table;
+	std::map <std::size_t, std::vector<double>> table_probabilities;
 	double model_entropy;
 	// vector goes from a to z and then space
 
@@ -65,12 +72,12 @@ public:
 	/**
 	 * Calculate probabilities
 	 */
-	std::unordered_map <std::string, std::vector<double>> calculate_probabilities(void);
+	std::map <std::size_t, std::vector<double>> calculate_probabilities(void);
 
 	/**
 	 * Calculate entropy
 	 */
-	double calculate_entropy(std::unordered_map <std::string, std::vector<double>> map);
+	double calculate_entropy(std::map<size_t, std::vector<double>> map);
 	double calculate_entropy(void);
 
 	/**
@@ -102,6 +109,20 @@ public:
 	double get_prob(char next_char,std::unordered_map <std::string, std::vector<double>> map);
 	double calculate_nBits(char *fToClassify,std::unordered_map <std::string, std::vector<double>> map);
 	double calculate_nBits(char *fToClassify);
+
+	void ctx_to_pos(std::string ctx,size_t *pos);
+	void pos_to_ctx(size_t pos, std::string &ctx);
+
+	/**
+	* saves prob matrix to fOut;
+	*/
+	void save_to_file(void); 
+
+	/**
+	* loads prob mat from file
+	*/
+	void load_from_file(const char *fname); 
+
 };
 
 
