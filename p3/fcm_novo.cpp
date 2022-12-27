@@ -30,6 +30,8 @@ Fcm::Fcm(size_t order,
 	this->alpha = alpha;
 }
 
+// a -> 0
+//
 void Fcm::open_file(const char *filename, int mode) {
 	if (mode == 0) {
 		//open file in input mode (read from)
@@ -74,7 +76,6 @@ void Fcm::add_to_context(char *new_char) {
 		context.erase(context.begin());
 	}
 	context += *new_char;
-	cout << context << endl;
 }
 
 void Fcm::increment_counter(const char *new_char) {
@@ -90,7 +91,6 @@ void Fcm::increment_counter(const char *new_char) {
 		             vector < size_t >> (key, new_vector));
 
 	}
-
 	// increment counter at this point is safe just to increment it
 	if (*new_char != ' ')
 		mat_count[key][(size_t)(*new_char) - ALPHABET_START]++;
@@ -160,6 +160,7 @@ double Fcm::calculate_entropy() {
 }
 
 bool Fcm::save_model(){
+
 	count_occurrences();
 	calculate_probabilities();
 
@@ -298,6 +299,10 @@ double Fcm::calculate_nBits(){
 
 
 void Fcm::count_occurrences() {
+
+	file_in.clear();
+	file_in.seekg(0);
+
 	int i = 0;
 	char c;
 	// read first char
