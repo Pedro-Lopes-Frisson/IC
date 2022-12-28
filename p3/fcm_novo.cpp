@@ -172,7 +172,7 @@ double Fcm::calculate_entropy() {
 		cum_sum = accumulate(mat_count[entry.first].begin(), mat_count[entry.first].end(), 0);
 		model_entropy += (cum_sum / chars_read) * ctx_entropy;
 	}
-	cout << "Entropy: " << model_entropy << endl;
+	//cout << "Entropy: " << model_entropy << endl;
 
 	return model_entropy;
 }
@@ -308,7 +308,7 @@ double Fcm::calculate_nBits(){
 		c = tolower(file_in.get());
 		//cout << "|" << c << "|" << endl;
 	}
-	cout << "Num Bits: " << num_Bits << endl;
+	//cout << "Num Bits: " << num_Bits << endl;
 	// discount EOF
 	chars_read--;
 	return num_Bits;

@@ -24,11 +24,11 @@ TARGET_LINK_LIBRARIES(fcm ${Boost_LIBRARIES})
 add_executable( fcm_test fcm_test.cpp )
 target_link_libraries( fcm_test fcm )
 
-add_executable( findlang findlang.cpp )
-target_link_libraries( findlang fcm )
+#add_executable( findlang findlang.cpp )
+#target_link_libraries( findlang fcm )
 
-add_executable( lang lang.cpp )
-target_link_libraries( lang fcm )
+#add_executable( lang lang.cpp )
+#target_link_libraries( lang fcm )
 
 #add_executable( locatelang locatelang.cpp )
 #target_link_libraries( locatelang fcm )
@@ -37,12 +37,11 @@ target_link_libraries( lang fcm )
 add_library(fcm_novo fcm_novo.h fcm_novo.cpp)
 TARGET_LINK_LIBRARIES(fcm_novo ${Boost_LIBRARIES})
 
-
-
 add_executable( fcm_test_novo fcm_test_novo.cpp )
 target_link_libraries( fcm_test_novo fcm_novo )
-
 
 add_executable( lang_novo lang_novo.cpp )
 target_link_libraries( lang_novo fcm_novo )
 
+add_executable( findlang_novo findlang_novo.cpp )
+target_link_libraries( findlang_novo fcm_novo )
