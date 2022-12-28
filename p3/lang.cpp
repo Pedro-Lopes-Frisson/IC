@@ -83,7 +83,7 @@ int main(int argc, char *argv[]){
 	// Count the ocorrencies of each context / letter
 	f.count_occurrences();
 	// Calculate the probabilities and store them in a map
-	unordered_map <string, vector<double>> map_prob = f.calculate_probabilities();
+	map <size_t, vector<double>> map_prob = f.calculate_probabilities();
     // Calculate Number of bits
     double nbits= f.calculate_nBits(ToBeAnalizedTextFile);
     // Print the entropy of the under analisies text based on language probs
