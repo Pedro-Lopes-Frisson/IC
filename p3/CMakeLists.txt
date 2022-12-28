@@ -42,3 +42,7 @@ TARGET_LINK_LIBRARIES(fcm_novo ${Boost_LIBRARIES})
 add_executable( fcm_test_novo fcm_test_novo.cpp )
 target_link_libraries( fcm_test_novo fcm_novo )
 
+
+add_executable( lang_novo lang_novo.cpp )
+target_link_libraries( lang_novo fcm_novo )
+
