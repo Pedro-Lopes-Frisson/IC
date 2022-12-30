@@ -1,5 +1,8 @@
 #include "fcm_novo.h"
+#include <cmath>
+#include <cstddef>
 #include <iostream>
+#include <vector>
 
 using namespace std;
 
@@ -14,6 +17,7 @@ Fcm::Fcm(size_t order,
 	count_occurrences();
 	calculate_probabilities();
 	save_model();
+	size_t pos;
 }
 
 Fcm::Fcm(size_t order,
@@ -21,6 +25,8 @@ Fcm::Fcm(size_t order,
 	k=order;
 	this->alpha = alpha;
 	open_file(fIn, 0);
+	size_t pos;
+
 }
 
 
@@ -28,6 +34,7 @@ Fcm::Fcm(size_t order,
 	 double_t alpha){
 	k=order;
 	this->alpha = alpha;
+	size_t pos;
 }
 
 // a -> 0
@@ -49,6 +56,7 @@ void Fcm::ctx_to_pos(string ctx, size_t *pos){
 	// a -> 0
 	// b -> 1
 	// aa -> 0 + 1 -> 0 + 0 0 + 1
+	// aaa -> 0 + 1 + -> 0 + 0 0 + 1
 	size_t space_pos = ALPHABET_LENGTH - 1;
 	size_t pos_t = 0;
 	for (size_t i = 0; i < k; i++) {
@@ -81,7 +89,8 @@ void Fcm::add_to_context(char *new_char) {
 void Fcm::increment_counter(const char *new_char) {
 	size_t key;
 	ctx_to_pos(context,&key);
-	if (mat_count.find(key) == mat_count.end()) {
+
+	if (mat_count.count(key) == 0) {
 		// context does not exist create it
 		// create vector
 		vector <size_t> new_vector(ALPHABET_LENGTH);
@@ -92,6 +101,15 @@ void Fcm::increment_counter(const char *new_char) {
 
 	}
 	// increment counter at this point is safe just to increment it
+	if (mat_count.find(key)->second.size() == 0) {
+		vector <size_t> new_vector(ALPHABET_LENGTH);
+
+		fill(new_vector.begin(), new_vector.end(), 0);
+		mat_count.erase(key);
+		
+		mat_count.insert(pair < size_t,
+		             vector < size_t >> (key, new_vector));
+	}
 	if (*new_char != ' ')
 		mat_count[key][(size_t)(*new_char) - ALPHABET_START]++;
 	else
@@ -154,7 +172,7 @@ double Fcm::calculate_entropy() {
 		cum_sum = accumulate(mat_count[entry.first].begin(), mat_count[entry.first].end(), 0);
 		model_entropy += (cum_sum / chars_read) * ctx_entropy;
 	}
-	cout << "Entropy: " << model_entropy << endl;
+	//cout << "Entropy: " << model_entropy << endl;
 
 	return model_entropy;
 }
@@ -290,7 +308,7 @@ double Fcm::calculate_nBits(){
 		c = tolower(file_in.get());
 		//cout << "|" << c << "|" << endl;
 	}
-	cout << "Num Bits: " << num_Bits << endl;
+	//cout << "Num Bits: " << num_Bits << endl;
 	// discount EOF
 	chars_read--;
 	return num_Bits;
@@ -340,4 +358,112 @@ void Fcm::count_occurrences() {
 
 	// discount EOF
 	chars_read--;
+}
+
+vector<double> Fcm::locate_lang_ent(void) {
+
+	file_in.clear();
+	file_in.seekg(0);
+	//mat_count = map<size_t, vector<size_t>>();
+	mat_count.clear();
+	vector<double> ent_values;
+
+	int i = 0;
+	char c;
+	// read first char
+	c = tolower(file_in.get());
+	//cout << "First: |" << c << "|" << endl;
+	chars_read++;
+
+	// fill buffer
+	while (i < this->k && c != EOF) {
+		if (isalpha(c) || c == ' ') {
+			add_to_context(&c);
+			//cout << "Valid: |" << c << "|" << endl;
+			c = tolower(file_in.get());
+			chars_read++;
+			i++;
+		} else {
+			//cout << "2 Not Valid: |" << c << "|" << endl;
+			c = tolower(file_in.get());
+		}
+	}
+
+	// Count and add to context
+	while (c != EOF) {
+		if (!isalpha(c) && c != ' ') {
+			//cout << "3 Not Valid: |" << c << "|" << endl;
+			c = tolower(file_in.get());
+			continue;
+		}
+		chars_read++;
+		cout << endl;
+		increment_counter(&c);
+		ent_values.push_back(calculate_entropy());
+		add_to_context(&c);
+		c = tolower(file_in.get());
+		//cout << "|" << c << "|" << endl;
+	}
+	// discount EOF
+	chars_read--;
+	return ent_values;
+}
+
+vector<double> Fcm::locate_lang_nBits(size_t bs) {
+	const size_t save_bs = bs;
+	file_in.clear();
+	file_in.seekg(0);
+	vector<double> nBits_values;
+
+	int i = 0;
+	char c;
+	// read first char
+	c = tolower(file_in.get());
+	//cout << "First: |" << c << "|" << endl;
+	chars_read++;
+	double prob;
+	size_t num_Bits = 0;
+
+	// fill buffer
+	while (i < this->k && c != EOF) {
+		if (isalpha(c) || c == ' ') {
+			add_to_context(&c);
+			//cout << "Valid: |" << c << "|" << endl;
+			c = tolower(file_in.get());
+			chars_read++;
+			i++;
+		} else {
+			//cout << "2 Not Valid: |" << c << "|" << endl;
+			c = tolower(file_in.get());
+		}
+	}
+
+	// Count and add to context
+	while (c != EOF) {
+		if (!isalpha(c) && c != ' ') {
+			//cout << "3 Not Valid: |" << c << "|" << endl;
+			c = tolower(file_in.get());
+			continue;
+		}
+		chars_read++;
+		//chars_read++;
+		prob = get_prob(c);
+
+		if( bs == 0){
+			bs = save_bs;
+			num_Bits = 0;
+		}
+
+		//num_Bits += ceil(-log2(get_prob(c)));
+		//nBits_values.push_back(num_Bits);
+		nBits_values.push_back(ceil(-log2(get_prob(c))));
+		add_to_context(&c);
+		c = tolower(file_in.get());
+		bs--;
+		//cout << "|" << c << "|" << endl;
+	}
+
+	// discount EOF
+	chars_read--;
+	return nBits_values;
 }
