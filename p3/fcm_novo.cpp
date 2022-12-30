@@ -360,54 +360,6 @@ void Fcm::count_occurrences() {
 	chars_read--;
 }
 
-vector<double> Fcm::locate_lang_ent(void) {
-
-	file_in.clear();
-	file_in.seekg(0);
-	//mat_count = map<size_t, vector<size_t>>();
-	mat_count.clear();
-	vector<double> ent_values;
-
-	int i = 0;
-	char c;
-	// read first char
-	c = tolower(file_in.get());
-	//cout << "First: |" << c << "|" << endl;
-	chars_read++;
-
-	// fill buffer
-	while (i < this->k && c != EOF) {
-		if (isalpha(c) || c == ' ') {
-			add_to_context(&c);
-			//cout << "Valid: |" << c << "|" << endl;
-			c = tolower(file_in.get());
-			chars_read++;
-			i++;
-		} else {
-			//cout << "2 Not Valid: |" << c << "|" << endl;
-			c = tolower(file_in.get());
-		}
-	}
-
-	// Count and add to context
-	while (c != EOF) {
-		if (!isalpha(c) && c != ' ') {
-			//cout << "3 Not Valid: |" << c << "|" << endl;
-			c = tolower(file_in.get());
-			continue;
-		}
-		chars_read++;
-		cout << endl;
-		increment_counter(&c);
-		ent_values.push_back(calculate_entropy());
-		add_to_context(&c);
-		c = tolower(file_in.get());
-		//cout << "|" << c << "|" << endl;
-	}
-	// discount EOF
-	chars_read--;
-	return ent_values;
-}
 
 vector<double> Fcm::locate_lang_nBits(size_t bs) {
 	const size_t save_bs = bs;
