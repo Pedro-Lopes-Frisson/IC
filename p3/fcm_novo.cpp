@@ -14,8 +14,20 @@ Fcm::Fcm(size_t order,
 	if(fOut != NULL)
 		open_file(fOut, 1);
 
+	clock_t start, end;
+
+	start = clock();
 	count_occurrences();
+	end = clock();
+	double time_taken = double(end - start) /double(CLOCKS_PER_SEC);
+	cout << "Time to count ocorrences: " << time_taken << setprecision(5) << endl;
+
+	start = clock();
 	calculate_probabilities();
+	end = clock();
+	double time_taken2 = double(end - start) /double(CLOCKS_PER_SEC);
+	cout << "Time to calculate probabilities: " << time_taken2 << setprecision(5) << endl;
+
 	save_model();
 	size_t pos;
 }
