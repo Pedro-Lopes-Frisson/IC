@@ -43,3 +43,7 @@ target_link_libraries( findlang_novo fcm_novo )
 add_executable( lang_novo lang_novo.cpp )
 target_link_libraries( lang_novo fcm_novo )
 
+
+add_executable( locatelang locatelang.cpp )
+target_link_libraries( locatelang fcm_novo )
+
