@@ -106,12 +106,19 @@ int main(int argc, char *argv[]){
 	// Lets run throug all_LanguageTextFile
 	for (int i = 0; i < n_Languages; i++){
 
+		string model_save (all_LanguageTextFile[i] );
+		model_save += "_model_prob_table";
 		// Create the FCM for the language texts so we can obtain the probability table
-		Fcm language_model(k, alpha, all_LanguageTextFile[i], "prob_table");
+		Fcm language_model(k, alpha, all_LanguageTextFile[i], model_save.data());
 		// Load the prob table to the ToBeAnalizedTextFile
-		ToBeAnalizedTextFile_model.load_model("prob_table");
+		ToBeAnalizedTextFile_model.load_model(model_save.data());
+		clock_t start, end;
 		// Calculate nBits needed
+		start = clock();
 		double nbits = ToBeAnalizedTextFile_model.calculate_nBits();
+		end = clock();
+		double time_taken = double(end - start) /double(CLOCKS_PER_SEC);
+    	cout << "Time to calculate nº bits: " << time_taken << setprecision(5) << endl;
 		// Store the number of bits
 		nBits_needed.push_back(nbits);
 		// Print to check whats happening

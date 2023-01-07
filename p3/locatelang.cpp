@@ -1,144 +1,175 @@
-#include "fcm.h"
 #include <algorithm>
+#include <cmath>
+#include <cstdlib>
+#include <iostream>
+#include <iterator>
+#include <unistd.h>
 #include <vector>
 #include <string>
-#include <iostream>
-#include <string>
-
+#include "fcm_novo.h"
 using namespace std;
 
-// Function to verify if a string is a positive integer number
-bool isPositiveIntegerNumber(string number) {
-    int i = 0;
+static void print_help(){
+	cerr << "Usage:" << endl;
+	cerr << "\t ./build/p3/locatelang <ToBeAnalizedTextFile> -k <k>  -a <alpha> -b <blocksize> -l <LanguageTextFile> -r <Reference Texts>" << endl;
+	cerr << "More that one flag can be used to specify more models to load or more reference texts to use" << endl;
+	cerr << "But -l and -r cannot be used at the same time" << endl;
 
-    //checking for negative numbers
-    if (number[0] == '-')
-        return false;
-    for (; number[i] != 0; i++){
-
-        if (!isdigit(number[i]))
-            return false;
-    }
-    return true;
 }
 
-// Function to verify if a string is a positive number (integer or double)
-bool isNumber(string number) {
 
-    //checking for negative numbers
-    if (number[0] == '-'){
-    	return false;
-    }
 
-    //Count the nuber of . or ,
-    int point_count = 0;
-    for (long unsigned int i = 0; i < number.size(); i++){
 
-    	if(number[i] == '.' || number[i] == ','){
-    		point_count++;
-    	}
-    	else if(!isdigit(number[i])){
-    		return false;
-    	}
+int main(int argc, char* argv[]){
+	size_t order = 0, blockSize = 0;
+	double alpha = 0;
+	vector<string> modelsToLoad;
+	vector<string> reference_texts;
 
-    	// Verify if there was more than one point
-    	if(point_count > 1){
-    		return false;
-    	}
-    }
-    return true;
+	if( argc < 4 ){
+		cerr << "You need to specify at least the executable and path of the text to classify, order of the model and a smoothing parameter" << endl;
+		return -1 ;
+	}
+	string text = string(argv[1]);
+
+	for(;;){
+		switch(getopt(argc, argv, "k:a:b:r:l:h")) // note the colon (:) to indicate that 'b' has a parameter and is not a switch
+			//
+		{
+			case 'k':
+				order = atol(optarg);
+				cout << order << endl;
+				if(order < 0){
+					cerr << "Value must be positive!" << endl;
+					return -1;
+				}
+				continue;
+			case 'a':
+				alpha = atof(optarg);
+				cout << alpha << endl;
+				if(alpha < 0){
+					cerr << "Value must be positive!" << endl;
+					return -1;
+				}
+				continue;
+
+			case 'b':
+				blockSize = atol(optarg);
+				cout << blockSize << endl;
+				if(blockSize < 0){
+					cerr << "Value must be positive!" << endl;
+					return -1;
+				}
+				continue;
+			case 'l':
+				modelsToLoad.push_back(string(optarg));
+				cout << optarg << endl;
+				continue;
+			case 'r':
+				reference_texts.push_back(string(optarg));
+				cout << optarg << endl;
+				continue;
+			case -1:
+				break;
+
+			case 'h':
+			default:
+				print_help();
+				break;
+
+		}
+		break;
+	}
+
+	Fcm text_to_analyse(order,alpha, text.data());
+	if(order == 0 || blockSize == 0 || alpha == (double)0){print_help(); return -1;} // do not allow any of these params to be 0
+	if(modelsToLoad.size() == 0 && reference_texts.size() == 0){print_help(); return -1;} // do not allow -r and -l to be specified at the same time
+	if(modelsToLoad.size() > 0 && reference_texts.size() > 0){print_help(); return -1;} // do not allow -r and -l to be specified at the same time
+	//
+	vector<vector<double>> bits_per_symbol_per_language;
+	if(modelsToLoad.size() > 0){
+		for(string f : modelsToLoad){
+			text_to_analyse.load_model(f.data());
+			bits_per_symbol_per_language.push_back(text_to_analyse.locate_lang_nBits(blockSize));
+		}
+	}
+	vector<vector<double>> bits_per_symbol_per_language_processed;
+	cout << "Block initial posistion - final position \t Language file" << endl;
+
+	if(bits_per_symbol_per_language.size() > 0){
+		for(size_t l = 0 ; l < bits_per_symbol_per_language.size(); l++){
+			cout << endl;
+			vector<double> vec = bits_per_symbol_per_language[l];
+			for(size_t i = 0; i < vec.size(); i++){
+				if(vec[i] == ceil( -(log2(alpha / (alpha * 27))))){
+					vec[i] *= 0;
+				}
+			}
+			bits_per_symbol_per_language[l] = vec;
+		}
+
+		vector<size_t> sums = vector<size_t>(bits_per_symbol_per_language.size());
+		fill(sums.begin(), sums.end(), 0);
+		size_t language_pos;
+
+		for(size_t i = 0; i < bits_per_symbol_per_language[0].size(); i++){
+			for(size_t l = 0 ; l < bits_per_symbol_per_language.size(); l++){
+				sums[l] += bits_per_symbol_per_language[l][i];
+			}
+			if(i != 0 && i % blockSize == 0){
+				int maxElementIndex = max_element(sums.begin(),sums.end()) - sums.begin();
+				int maxElement = *max_element(sums.begin(), sums.end());
+
+				cout << i-blockSize << " - " << i << " has the same as the file: " << modelsToLoad[maxElementIndex];
+				cout << endl;
+				fill(sums.begin(), sums.end(), 0);
+			}
+		}
+		return 0;
+	}
+
+
+	if(reference_texts.size() > 0){
+		string prob_table_file;
+		for(string f : reference_texts){
+			prob_table_file = f + "prob_table";
+			Fcm references(order,alpha,f.data(), prob_table_file.data());
+			
+			text_to_analyse.load_model(prob_table_file.data());
+			bits_per_symbol_per_language.push_back(text_to_analyse.locate_lang_nBits(blockSize));
+		}
+	}
+
+	if(bits_per_symbol_per_language.size() > 0){
+		for(size_t l = 0 ; l < bits_per_symbol_per_language.size(); l++){
+			cout << endl;
+			vector<double> vec = bits_per_symbol_per_language[l];
+			for(size_t i = 0; i < vec.size(); i++){
+				if(vec[i] == ceil( -(log2(alpha / (alpha * 27))))){
+					vec[i] *= 0;
+				}
+			}
+			bits_per_symbol_per_language[l] = vec;
+		}
+
+		vector<size_t> sums = vector<size_t>(bits_per_symbol_per_language.size());
+		fill(sums.begin(), sums.end(), 0);
+		size_t language_pos;
+
+		for(size_t i = 0; i < bits_per_symbol_per_language[0].size(); i++){
+			for(size_t l = 0 ; l < bits_per_symbol_per_language.size(); l++){
+				sums[l] += bits_per_symbol_per_language[l][i];
+			}
+			if(i != 0 && i % blockSize == 0){
+				language_pos = distance(sums.begin(), max_element(sums.begin(), sums.end()));
+				cout << i-blockSize << " - " << i << " has the same as the file: " << reference_texts[language_pos];
+				cout << endl;
+				fill(sums.begin(), sums.end(), 0);
+			}
+		}
+		return 0;
+	}
+
+
+	return -1;
 }
-
-int main(int argc, char *argv[]){
-
-
-	// Check if number of arguments is minimal 3, the path, the text to be analised
-	// and the text that represents the language
-	if(argc < 4){
-		cerr << "Minimal Usage: ./build/p3/locatelang <k> <alpha> <ToBeAnalizedTextFile> <LanguageTextFile>\n";
-		return 1;
-	}
-
-	// Verify if k argumetn is a number
-    if(isPositiveIntegerNumber(argv[1]) == false){
-    	cerr << "The argumetn k must be a positive integer\nMinimal Usage: ./build/p3/locatelang <k> <alpha> <ToBeAnalizedTextFile> <LanguageTextFile>\n";
-        return 1;
-    }
-
-    // Verify if alpha is a number (integer or float)
-    if(isNumber(argv[2]) == false){
-    	cerr << "The argument alph must be a positive number\nMinimal Usage: ./build/p3/locatelang <k> <alpha> <ToBeAnalizedTextFile> <LanguageTextFile>\n";
-        return 1;
-    }
-
-    // Store the ToBeAnalizedTextFile
-	char* ToBeAnalizedTextFile = argv[3];
-	// k argument
-	int k = atoi(argv[1]);
-	// alpha argument
-	double alpha = atof(argv[2]);
-	// Read the number of arguments
-	int n_Languages = argc - 4; // -4 because the path, k, alpha and ToBeAnalizedTextFile
-	// Store the text files on a vector
-	vector<char*> all_LanguageTextFile;
-	// Define a vectro to store all entropies from languages
-	vector<double> language_entropies;
-
-	// Store all LanguageTextFile
-	for (int i = 0; i < n_Languages; i++){
-
-		//Push the file into the vector
-		all_LanguageTextFile.push_back(argv[i+4]);
-	}
-
-	// Vector to store the probabilities maps
-	vector<unordered_map <string, vector<double>>> prob_maps;
-
-	// Lets run throug all_LanguageTextFile and calculate the entropy
-	for (int i = 0; i < n_Languages; i++){
-
-		// Create the FCM for the language texts so we can obtain the probability table
-		fcm f(k, alpha, all_LanguageTextFile[i], "file1.txt.out");
-		// Count the ocorrencies of each context / letter
-		f.count_occurrences();
-		// Calculate the probabilities and store them in a map
-		unordered_map <string, vector<double>> map_prob = f.calculate_probabilities();
-		prob_maps.push_back(map_prob);
-		// Calculate the entropy of the language
-		double lang_entro = f.calculate_entropy();
-		language_entropies.push_back(lang_entro);
-
-		cout << "Entropy of language model " << all_LanguageTextFile[i] << ": " << lang_entro << endl;
-
-	}
-
-	cout << endl;
-
-	// Create the FCM for the under analisys text to get the entropy based on the probabilities of the languages texts
-	fcm f_A(k, alpha, ToBeAnalizedTextFile, "file2.txt.out");
-	// Count the ocorrencies of each context / letter on the under analises text
-	f_A.count_occurrences();
-	// Map to store all instantaneous entropys for each language
-	unordered_map <int, vector<double>> inst_entropy_maps;
-
-	// Get the instant entropy of the under analises text for each language model
-	for (int i = 0; i < n_Languages; i++){
-
-		vector<double> inst_entropy = f_A.calculate_inst_entropy(prob_maps[i]);
-		inst_entropy_maps.insert({ i, inst_entropy});
-
-	}
-
-	// Print map to see if everything went good
-	for (auto itr = inst_entropy_maps.begin(); itr != inst_entropy_maps.end(); ++itr) {
-        cout << itr->first << '\t';
-        for (long unsigned int i = 0; i < itr->second.size(); i++){
-        	cout << itr->second[i]<< ", ";
-        }
-        cout << endl;
-    }
-
-
-
-
-};

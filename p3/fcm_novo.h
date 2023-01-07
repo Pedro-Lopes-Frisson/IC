@@ -120,6 +120,9 @@ class Fcm{
 	 * save model
 	 */
 	bool save_model(void);
+
+
+	std::vector<double> locate_lang_nBits(size_t bs);
 };
 
 

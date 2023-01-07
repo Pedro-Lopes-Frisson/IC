@@ -8,8 +8,10 @@ using namespace std;
 void ctx_to_pos(string ctx, size_t *pos, int k);
 int main() {
 	//create a model
-	Fcm f (6,0.001, "mini_example_GER.txt", "Model_example");
-	Fcm portugues (6,0.001, "mini_example_PT.txt", "PT_model");
+	//Fcm ingles (6,0.5, "dataset/Europarl/en_GB.English-latn-EP7.utf8", "English_model_6_0_001");
+	//Fcm portugues (6,0.5, "dataset/Europarl/pt_PT.Portugese-latn-EP7.utf8", "Portuguese_model_6_0_001");
+	//Fcm espanhol (6,0.5,    "dataset/Europarl/es_ES.Spanish-latn-EP7.utf8", "Spanish_model_6_0_001");
+	Fcm alemao (6,0.5,    "dataset/Europarl/de_DE.German-latn-EP7.utf8", "German_model_6_0_001");
 	// this will by default count occurrences, calculate_probabilities and then save the mat_prob to Mopdel_example
 	//
 	
@@ -20,6 +22,28 @@ int main() {
 
 	// calculate how many bits are needed to encode this file according to the loaded model
 	floaded.calculate_nBits();
+	ofstream file ("values_bits_en_pt_german");
+
+	vector<double> ents_EN;
+	vector<double> nBits_s_EN;
+	nBits_s_EN = floaded.locate_lang_nBits(8);
+	//ents_EN = floaded.locate_lang_ent();
+
+	cout << "Ents_EN";
+	cout << endl;
+	size_t cum_sum = 0;
+	double average_bs = 0;
+	for (size_t i = 0; i < nBits_s_EN.size(); i++ ) {
+		if (i % 8 == 0 and i != 0){
+			average_bs = ((double) cum_sum) / 8;
+			cum_sum = 0;
+			cout << i-8 << " - " << i << " Avg num bits: " << average_bs;
+			cout << endl;
+		}
+		cum_sum += nBits_s_EN[i];
+	}
+
+
 
 	size_t pos;
 	ctx_to_pos("aaa", &pos, 3 );
@@ -47,23 +71,42 @@ int main() {
 
 
 	// Load another model and compute number of bits
-	floaded.load_model("PT_model");
+	floaded.load_model("Portuguese_model_6_0_001");
 	floaded.calculate_nBits();
 	vector<double> ents_PT;
 	vector<double> nBits_s_PT;
-	nBits_s_PT = floaded.locate_lang_nBits(3);
-	ents_PT = floaded.locate_lang_ent();
 
-	cout << "Ents_PT";
+	nBits_s_PT = floaded.locate_lang_nBits(8);
 	cout << endl;
-	for (auto _ents :ents_PT) {
-		cout << _ents << endl;		
+	cout << "PT MODEL" << endl;
+	for (size_t i = 0; i < nBits_s_PT.size(); i++ ) {
+		if (i % 8 == 0 and i != 0){
+			average_bs = ((double) cum_sum) / 8;
+			cum_sum = 0;
+			cout << i-8 << " - " << i << " Avg num bits: " << average_bs;
+			cout << endl;
+		}
+		cum_sum += nBits_s_PT[i];
 	}
 
-	cout << "NBits_PT";
+
+	// Load another model and compute number of bits
+	floaded.load_model("German_model_6_0_001");
+	floaded.calculate_nBits();
+	vector<double> ents_ES;
+	vector<double> nBits_s_ES;
+	nBits_s_ES = floaded.locate_lang_nBits(8);
 	cout << endl;
-	for (auto _bits : nBits_s_PT) {
-		cout << _bits << endl;		
+	cout << "German MODEL" << endl;
+	for (size_t i = 0; i < nBits_s_ES.size(); i++ ) {
+		if (i % 8 == 0 and i != 0){
+			average_bs = ((double) cum_sum) / 8;
+			cum_sum = 0;
+			cout << i-8 << " - " << i << " Avg num bits: " << average_bs;
+			cout << endl;
+		}
+		cum_sum += nBits_s_ES[i];
+		file << nBits_s_EN[i] << " " << nBits_s_PT[i] << " " << nBits_s_ES[i] << endl;
 	}
 
 

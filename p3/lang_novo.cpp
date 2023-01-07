@@ -88,8 +88,13 @@ int main(int argc, char *argv[]){
 	Fcm ToBeAnalizedTextFile_model(k, alpha, ToBeAnalizedTextFile);
 	// Load the prob_table
 	ToBeAnalizedTextFile_model.load_model("prob_table");
+    clock_t start, end;
 	// Calculate nBits
+    start = clock();
 	double nbits = ToBeAnalizedTextFile_model.calculate_nBits();
+    end = clock();
+    double time_taken = double(end - start) /double(CLOCKS_PER_SEC);
+    cout << "Time to calculate nº bits: " << time_taken << setprecision(5) << endl;
 
 	// Print the result
 	cout << "Using the " << LanguageTextFile << " model, the under analise text would need " << nbits << " bits to be writen."<< endl;
