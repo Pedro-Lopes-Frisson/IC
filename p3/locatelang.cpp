@@ -101,7 +101,7 @@ int main(int argc, char* argv[]){
 			cout << endl;
 			vector<double> vec = bits_per_symbol_per_language[l];
 			for(size_t i = 0; i < vec.size(); i++){
-				if(vec[i] == ceil( -(log2(alpha / (alpha * 27))))){
+				if(vec[i] >= ceil( -(log2(alpha / (alpha * 27))))){
 					vec[i] *= 0;
 				}
 			}
@@ -145,7 +145,7 @@ int main(int argc, char* argv[]){
 			cout << endl;
 			vector<double> vec = bits_per_symbol_per_language[l];
 			for(size_t i = 0; i < vec.size(); i++){
-				if(vec[i] == ceil( -(log2(alpha / (alpha * 27))))){
+				if(vec[i] >= ceil( -(log2(alpha / (alpha * 27))))){
 					vec[i] *= 0;
 				}
 			}

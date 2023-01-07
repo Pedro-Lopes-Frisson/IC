@@ -11,7 +11,7 @@ int main() {
 	//Fcm ingles (6,0.5, "dataset/Europarl/en_GB.English-latn-EP7.utf8", "English_model_6_0_001");
 	//Fcm portugues (6,0.5, "dataset/Europarl/pt_PT.Portugese-latn-EP7.utf8", "Portuguese_model_6_0_001");
 	//Fcm espanhol (6,0.5,    "dataset/Europarl/es_ES.Spanish-latn-EP7.utf8", "Spanish_model_6_0_001");
-	Fcm alemao (6,0.5,    "dataset/Europarl/de_DE.German-latn-EP7.utf8", "German_model_6_0_001");
+	//Fcm alemao (6,0.5,    "dataset/Europarl/de_DE.German-latn-EP7.utf8", "German_model_6_0_001");
 	// this will by default count occurrences, calculate_probabilities and then save the mat_prob to Mopdel_example
 	//
 	
@@ -22,7 +22,7 @@ int main() {
 
 	// calculate how many bits are needed to encode this file according to the loaded model
 	floaded.calculate_nBits();
-	ofstream file ("values_bits_en_pt_german");
+	ofstream file ("values_bits_en_pt_es");
 
 	vector<double> ents_EN;
 	vector<double> nBits_s_EN;
@@ -65,7 +65,7 @@ int main() {
 
 
 	// Load another model and compute number of bits
-	floaded.load_model("German_model_6_0_001");
+	floaded.load_model("Spanish_model_6_0_001");
 	floaded.calculate_nBits();
 	vector<double> ents_ES;
 	vector<double> nBits_s_ES;
