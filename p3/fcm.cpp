@@ -246,6 +246,7 @@ double fcm::calculate_entropy() {
 	return model_entropy;
 }
 
+
 void fcm::count_occurrences() {
 	int i = 0;
 	char c;
@@ -379,7 +380,9 @@ double fcm::get_prob(char next_char,unordered_map <string, vector<double>> map )
 	return map[ctx][ (size_t)next_char - ALPHABET_START];
 }
 
-double fcm::calculate_nBits(char * fToClassify,unordered_map <string, vector<double>> map  ){
+//double fcm::calculate_nBits(char * fToClassify,unordered_map <string, vector<double>> map  ){
+double fcm::calculate_nBits(unordered_map <string, vector<double>> map  ){
+
 	// GoTo begin of file
 	file_in.clear();
 	file_in.seekg(0);
@@ -423,7 +426,7 @@ double fcm::calculate_nBits(char * fToClassify,unordered_map <string, vector<dou
 		c = tolower(file_in.get());
 		//cout << "|" << c << "|" << endl;
 	}
-	cout << "Num Bits: " << num_Bits << endl;
+	//cout << "Num Bits: " << num_Bits << endl;
 	// discount EOF
 	chars_read--;
 	return num_Bits;
@@ -467,7 +470,6 @@ double fcm::calculate_nBits(char * fToClassify){
 		c = tolower(fIn.get());
 		//cout << "|" << c << "|" << endl;
 	}
-	cout << num_Bits;
 	// discount EOF
 	chars_read--;
 	return num_Bits;

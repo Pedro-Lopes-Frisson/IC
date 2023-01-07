@@ -88,7 +88,6 @@ int main(int argc, char *argv[]){
 	Fcm ToBeAnalizedTextFile_model(k, alpha, ToBeAnalizedTextFile);
 	// Load the prob_table
 	ToBeAnalizedTextFile_model.load_model("prob_table");
-     
     clock_t start, end;
 	// Calculate nBits
     start = clock();

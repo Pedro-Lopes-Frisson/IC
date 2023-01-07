@@ -372,7 +372,6 @@ void Fcm::count_occurrences() {
 	chars_read--;
 }
 
-
 vector<double> Fcm::locate_lang_nBits(size_t bs) {
 	const size_t save_bs = bs;
 	file_in.clear();
@@ -418,9 +417,9 @@ vector<double> Fcm::locate_lang_nBits(size_t bs) {
 			num_Bits = 0;
 		}
 
-		//num_Bits += ceil(-log2(get_prob(c)));
-		//nBits_values.push_back(num_Bits);
-		nBits_values.push_back(ceil(-log2(get_prob(c))));
+		num_Bits += ceil(-log2(get_prob(c)));
+		nBits_values.push_back(num_Bits);
+
 		add_to_context(&c);
 		c = tolower(file_in.get());
 		bs--;

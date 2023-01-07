@@ -105,6 +105,7 @@ int main(int argc, char *argv[]){
 	vector<size_t> nBits_needed;
 	// Lets run throug all_LanguageTextFile
 	for (int i = 0; i < n_Languages; i++){
+
 		string model_save (all_LanguageTextFile[i] );
 		model_save += "_model_prob_table";
 		// Create the FCM for the language texts so we can obtain the probability table

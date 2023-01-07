@@ -103,6 +103,15 @@ class Fcm{
 	double get_prob(char next_char);
 
 	/**
+	 *  get probability of the next char being ch inside the current context inside this model
+	 */
+	std::vector<double> locate_lang_ent (void);
+
+	/**
+	 *  get probability of the next char being ch inside the current context inside this model
+	 */
+	std::vector<double> locate_lang_nBits (size_t bs);
+	/**
 	 * load model saved in the file
 	 */
 	bool load_model(const char * fname);

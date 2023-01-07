@@ -16,8 +16,8 @@ int main() {
 	//
 	
 	
-	Fcm floaded(6,0.5, "mini_example_ToBeAnalised_EN_with_PT.txt");
-	floaded.load_model("English_model_6_0_001");
+	Fcm floaded(6,0.001, "mini_example_ToBeAnalised_GER_with_PT.txt");
+	floaded.load_model("Model_example");
 	// Now we have the model we created before loaded on this instance
 
 	// calculate how many bits are needed to encode this file according to the loaded model
@@ -45,11 +45,37 @@ int main() {
 
 
 
+	size_t pos;
+	ctx_to_pos("aaa", &pos, 3 );
+	cout << "aaa" << pos << endl;
+	ctx_to_pos("a", &pos, 1 );
+	cout << "a" << pos << endl;
+
+	vector<double> ents_EN;
+	vector<double> nBits_s_EN;
+	nBits_s_EN = floaded.locate_lang_nBits(3);
+	ents_EN = floaded.locate_lang_ent();
+
+	cout << "Ents_EN";
+	cout << endl;
+	for (auto _ents :ents_EN) {
+		cout << _ents << endl;		
+	}
+
+	cout << "NBits_EN";
+	cout << endl;
+	for (auto _bits : nBits_s_EN) {
+		cout << _bits << endl;		
+	}
+
+
+
 	// Load another model and compute number of bits
 	floaded.load_model("Portuguese_model_6_0_001");
 	floaded.calculate_nBits();
 	vector<double> ents_PT;
 	vector<double> nBits_s_PT;
+
 	nBits_s_PT = floaded.locate_lang_nBits(8);
 	cout << endl;
 	cout << "PT MODEL" << endl;
